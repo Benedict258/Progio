@@ -1,0 +1,8 @@
+export default function SavedScholarshipsPage() {
+  return (
+    <div className="p-8">
+      <h1 className="text-3xl font-bold text-slate-900 mb-2">Saved Scholarships</h1>
+      <p className="text-slate-600">Scholarships you have bookmarked for later.</p>
+    </div>
+  );
+}
