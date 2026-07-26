@@ -1,6 +1,10 @@
 import sys
 import uuid
 import asyncio
+import hashlib
+import math
+import re
+from collections import Counter
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -8,12 +12,50 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy import update
 
 from app.core.config import settings
 from app.models import (
     User, Opportunity, Application, ResearchProject,
     Project, ReadinessAssessment, AlertPreference,
 )
+
+EMBEDDING_DIM = 128
+
+
+def _text_to_embedding(text: str) -> list[float]:
+    tokens = re.findall(r"[a-z0-9]+", text.lower())
+    if not tokens:
+        return [0.0] * EMBEDDING_DIM
+    token_counts = Counter(tokens)
+    total = len(tokens)
+    vec = [0.0] * EMBEDDING_DIM
+    for token, count in token_counts.items():
+        tf = count / total
+        digest = hashlib.sha256(token.encode()).digest()
+        for i in range(EMBEDDING_DIM):
+            sign = 1.0 if digest[i % 32] % 2 == 0 else -1.0
+            magnitude = (digest[(i + 1) % 32] / 255.0) * 2.0
+            vec[i] += sign * magnitude * tf
+    norm = math.sqrt(sum(v * v for v in vec)) or 1.0
+    return [v / norm for v in vec]
+
+
+def _build_opp_text(field_tags, eligibility, region, title, provider):
+    parts = []
+    if field_tags:
+        parts.extend(field_tags)
+    if eligibility:
+        for k, v in eligibility.items():
+            parts.append(f"{k}: {v}")
+    if region:
+        parts.append(region)
+    if title:
+        parts.append(title)
+    if provider:
+        parts.append(provider)
+    return " ".join(parts)
+
 
 USERS = [
     {
@@ -179,11 +221,21 @@ async def seed():
         for u in USERS:
             await session.execute(pg_insert(User).values(**u).on_conflict_do_nothing(index_elements=["id"]))
 
-        for g in GRANTS + SCHOLARSHIPS:
-            await session.execute(pg_insert(Opportunity).values(**g).on_conflict_do_nothing(index_elements=["id"]))
+        for opp in GRANTS + SCHOLARSHIPS:
+            embedding = _text_to_embedding(
+                _build_opp_text(
+                    opp.get("field_tags"),
+                    opp.get("eligibility_criteria"),
+                    opp.get("region"),
+                    opp.get("title"),
+                    opp.get("provider"),
+                )
+            )
+            opp_data = {**opp, "embedding": embedding}
+            await session.execute(pg_insert(Opportunity).values(**opp_data).on_conflict_do_nothing(index_elements=["id"]))
 
         await session.commit()
-        print(f"Seeded {len(USERS)} users and {len(GRANTS) + len(SCHOLARSHIPS)} opportunities.")
+        print(f"Seeded {len(USERS)} users and {len(GRANTS) + len(SCHOLARSHIPS)} opportunities with embeddings.")
 
 
 if __name__ == "__main__":
