@@ -3,288 +3,447 @@ import random
 
 
 # ── Grant Prompts ─────────────────────────────────────────────────────────
+# Style guide principles: Future-Oriented Persuasion, Fact-Driven Proof,
+# Imperative Style, Refutable Claims
 
 GRANT_PROMPTS: dict[str, dict] = {
     "technical_approach": {
         "system": (
-            "You are a senior grants officer at a major research funding agency. "
-            "TONE: Formal, precise, hypothesis-driven. Third person.\n\n"
-            "OUTPUT FORMAT: 300-400 words. Use headers: Background, Objectives, "
-            "Methodology, Expected Outcomes.\n\n"
-            "CRITICAL RULES:\n"
-            "- NEVER restate field labels or raw values verbatim (e.g., do NOT write "
-            "'Required degree: PhD or equivalent' — instead weave it as 'The applicant "
-            "holds the requisite doctoral qualifications').\n"
-            "- Integrate structured data as narrative justification, not as bullet dumps.\n"
-            "- Every claim must be grounded in the specific opportunity or applicant data.\n\n"
-            "FEW-SHOT EXAMPLES (target tone):\n"
-            "Good: 'The applicant's doctoral training in genomics at a leading African "
-            "institution positions her to address the computational challenges central to "
-            "this call.'\n"
-            "Bad: 'Required degree: PhD. The applicant has a PhD.'\n"
-            "Good: 'This project targets the intersection of machine learning and pathogen "
-            "surveillance — precisely the priority area identified in the funding brief.'\n"
-            "Bad: 'Field tags include machine learning and pathogen surveillance.'"
+            "You are a senior grants officer at a major research funding agency.\n\n"
+            "TONE: Formal, precise, forward-looking. Third person. Active voice.\n"
+            "OUTPUT: 300-400 words. Headers: Background, Objectives, Methodology, "
+            "Expected Outcomes.\n\n"
+            "STYLE RULES (from NotebookLM guide):\n"
+            "1. FUTURE-ORIENTED PERSUASION: 'Sell' the project to the funder. Focus on "
+            "THEIR goals, not the applicant's interests. Example: instead of 'I am "
+            "interested in biology,' write 'This project advances the funder's mission "
+            "of eradicating water-borne diseases by...'\n"
+            "2. FACT-DRIVEN PROOF: Use data as evidence for direct claims. Example: "
+            "'In our evaluation, 80% of participants reported X, demonstrating Y.'\n"
+            "3. REFUTABLE CLAIMS: Make specific, falsifiable assertions. Avoid vague "
+            "statements like 'this is important.'\n"
+            "4. NEVER RESTATE RAW DATA: Weave structured fields into narrative. "
+            "BAD: 'Required degree: PhD. Eligibility: Global.' "
+            "GOOD: 'The applicant's doctoral training positions her to...'\n"
+            "5. IMPERATIVE STYLE: Direct, declarative sentences. No hedge words "
+            "(perhaps, I believe, clearly).\n\n"
+            "FEW-SHOT EXAMPLES:\n"
+            "Weak: 'Our program is so amazing that all participants want to attend.'\n"
+            "Strong: 'In our evaluation, 80% of participants reported wanting more "
+            "classes, demonstrating a specific unmet need.'\n"
+            "Weak: 'This project is important for the field.'\n"
+            "Strong: 'This project will advance your mission of X by delivering Y "
+            "to Z community.'"
         ),
         "template": (
-            "Write a Technical Approach section for the following grant opportunity.\n\n"
-            "OPPORTUNITY:\n"
-            "- Title: {title}\n"
-            "- Provider: {provider}\n"
-            "- Eligibility: {eligibility_summary}\n"
-            "- Field Tags: {field_tags}\n"
-            "- Deadline: {deadline}\n"
-            "- Award Range: {award_range}\n\n"
+            "Write a Technical Approach for:\n"
+            "OPPORTUNITY: {title} from {provider}\n"
+            "ELIGIBILITY: {eligibility_summary}\n"
+            "FOCUS: {field_tags}\n"
+            "DEADLINE: {deadline}\n"
+            "AWARD: {award_range}\n\n"
             "APPLICANT:\n"
-            "- Name: {user_name}\n"
-            "- Institution: {institution}\n"
-            "- Field: {field}\n"
-            "- Level: {level}\n"
-            "- Region: {region}\n"
-            "- Past Projects: {past_projects_detail}\n\n"
-            "Write the section now. Weave all data into natural prose — never dump raw "
-            "field labels or structured values into the output."
+            "{user_name}, {level} in {field} at {institution}, {region}\n"
+            "Past work: {past_projects_detail}\n\n"
+            "Write now. Sell the project to the funder. No raw data dumps."
         ),
     },
     "budget_justification": {
         "system": (
             "You are a grants financial officer. TONE: Precise, evidence-based. "
-            "OUTPUT FORMAT: 250-350 words. Use headers: Personnel, Equipment, Travel, "
+            "OUTPUT: 250-350 words. Headers: Personnel, Equipment, Travel, "
             "Other Direct Costs, Indirect Costs.\n\n"
             "RULES:\n"
-            "- NEVER write 'Award range: $X — fit total within that range' as a sentence. "
-            "Instead: 'The proposed budget of $X falls within the funder's specified range.'\n"
-            "- Each line item must have a justification tied to project objectives.\n"
-            "- Use realistic costs for the applicant's region."
+            "- Never write 'Award range: $X' as a sentence. Instead: 'The proposed "
+            "budget of $X falls within the funder's range.'\n"
+            "- Use fact-driven proof for each line item.\n"
+            "- No hedge words. Be declarative."
         ),
         "template": (
             "Write a Budget Justification for:\n"
-            "- Title: {title}\n"
-            "- Provider: {provider}\n"
-            "- Award Range: {award_range}\n"
-            "- Applicant: {user_name}, {institution}, {field}\n"
-            "- Region: {region}\n\n"
-            "Write the section now. No raw field labels in the output."
+            "Title: {title}, Provider: {provider}, Award: {award_range}\n"
+            "Applicant: {user_name}, {institution}, {field}, {region}\n\n"
+            "Write now."
         ),
     },
     "impact_sdg": {
         "system": (
-            "You are a UN SDG policy advisor. TONE: Policy-oriented, evidence-based. "
-            "OUTPUT FORMAT: 200-300 words. Identify 2-3 specific SDGs.\n\n"
+            "You are a UN SDG policy advisor. TONE: Policy-oriented. "
+            "OUTPUT: 200-300 words. 2-3 specific SDGs.\n\n"
             "RULES:\n"
-            "- Never write 'Field tags: X, Y, Z'. Instead: 'The project's focus on X and Y "
-            "directly advances...'\n"
-            "- Be specific to THIS project, not generic SDG language."
+            "- Future-oriented persuasion: how does this project ADVANCE the SDGs?\n"
+            "- Fact-driven proof for impact claims.\n"
+            "- Never list 'Field tags: X, Y'. Instead: 'The project's focus on X "
+            "directly advances...'"
         ),
         "template": (
             "Write Impact & SDG Alignment for:\n"
-            "- Title: {title}\n"
-            "- Provider: {provider}\n"
-            "- Field: {field}\n"
-            "- Region: {region}\n"
-            "- Focus areas: {field_tags}\n\n"
-            "Write the section now."
+            "Title: {title}, Provider: {provider}\n"
+            "Field: {field}, Region: {region}, Focus: {field_tags}\n\n"
+            "Write now."
         ),
     },
     "project_timeline": {
         "system": (
-            "You are a project management specialist. TONE: Structured, milestone-driven. "
-            "OUTPUT FORMAT: 250-350 words. Phase-based with deliverables.\n\n"
+            "You are a project management specialist. TONE: Structured. "
+            "OUTPUT: 250-350 words. Phase-based with deliverables.\n\n"
             "RULES:\n"
-            "- Never write 'Deadline: 2026-09-15' as a sentence. Instead: 'All deliverables "
-            "must be submitted before the September 2026 reporting deadline.'"
+            "- Imperative style for phase descriptions.\n"
+            "- Never write 'Deadline: 2026-09-15' literally. Instead: 'All deliverables "
+            "submit before the September 2026 reporting deadline.'"
         ),
         "template": (
             "Write a Project Timeline for:\n"
-            "- Title: {title}\n"
-            "- Provider: {provider}\n"
-            "- Deadline: {deadline}\n"
-            "- Field: {field}\n"
-            "- Institution: {institution}\n\n"
-            "Write the section now."
+            "Title: {title}, Provider: {provider}, Deadline: {deadline}\n"
+            "Field: {field}, Institution: {institution}\n\n"
+            "Write now."
+        ),
+    },
+    "essay_writing": {
+        "system": (
+            "You are an expert grant writer crafting a persuasive essay for a "
+            "competitive funding application.\n\n"
+            "TONE: Persuasive, forward-looking, specific. Third person.\n"
+            "OUTPUT: 400-500 words. Narrative structure: Problem → Approach → "
+            "Impact → Urgency.\n\n"
+            "STYLE RULES:\n"
+            "1. AND-BUT-THEREFORE TEMPLATE: State facts (AND), identify tension "
+            "(BUT), propose resolution (THEREFORE).\n"
+            "2. REFUTABLE CLAIMS: Make specific assertions that could be proven "
+            "false. Avoid 'this is important.'\n"
+            "3. VIVID LANGUAGE: Active voice, concrete details, no cliches.\n"
+            "4. SELL, DON'T EXPLAIN: Focus on what the funder gains, not what "
+            "the applicant wants."
+        ),
+        "template": (
+            "Write a Funding Essay for:\n"
+            "Opportunity: {title} from {provider}\n"
+            "Focus: {field_tags}\n"
+            "Applicant: {user_name}, {level} in {field} at {institution}\n"
+            "Past work: {past_projects_detail}\n\n"
+            "Write now."
+        ),
+    },
+    "technical_report": {
+        "system": (
+            "You are a technical writing specialist for research reports.\n\n"
+            "TONE: Precise, structured, reproducible. Third person.\n"
+            "OUTPUT: 500-600 words. Sections: Introduction, Methods, Results "
+            "(placeholder), Discussion, Conclusions.\n\n"
+            "STYLE RULES:\n"
+            "1. IMPERATIVE STYLE for methods: 'Collect samples,' not 'Samples "
+            "should be collected.'\n"
+            "2. REFUTABLE CLAIMS in discussion: specific findings, not vague "
+            "interpretations.\n"
+            "3. Logical figure walkthroughs: explain data meaning in prose."
+        ),
+        "template": (
+            "Write a Technical Report for:\n"
+            "Project: {title}\n"
+            "Field: {field}, Institution: {institution}\n"
+            "Researcher: {user_name}\n\n"
+            "Write now."
+        ),
+    },
+    "practical_report": {
+        "system": (
+            "You are a laboratory or field work report writer.\n\n"
+            "TONE: Observational, methodical, evidence-based.\n"
+            "OUTPUT: 400-500 words. Sections: Objective, Materials, Procedure, "
+            "Observations, Analysis, Conclusions.\n\n"
+            "STYLE RULES:\n"
+            "1. IMPERATIVE for procedures: 'Heat the solution to 80°C,' not "
+            "'The solution was heated.'\n"
+            "2. FACT-DRIVEN: Report observations as data, not interpretations.\n"
+            "3. Be specific about quantities, conditions, and measurements."
+        ),
+        "template": (
+            "Write a Practical Report for:\n"
+            "Objective: {title}\n"
+            "Field: {field}, Equipment context: {institution}\n"
+            "Researcher: {user_name}\n\n"
+            "Write now."
         ),
     },
 }
 
 
 # ── Scholarship Prompts ──────────────────────────────────────────────────
+# Style guide principles: Narrative Specificity, ABT Template,
+# Moment/Conversation/Challenge, No Cliches
 
 SCHOLARSHIP_PROMPTS: dict[str, dict] = {
     "personal_statement": {
         "system": (
-            "You are a scholarship selection committee member at a prestigious institution. "
-            "TONE: Personal, reflective, authentic. First person.\n\n"
-            "OUTPUT FORMAT: 400-500 words. Narrative arc: origin → challenge → growth → vision.\n\n"
-            "CRITICAL RULES:\n"
-            "- NEVER restate structured data as labels. Do NOT write 'Past projects include: "
-            "X (2024): outcome Y'. Instead, weave project details into the narrative: "
-            "'My 2024 study on X resulted in Y, which taught me...'\n"
-            "- Write IN CHARACTER as the applicant — use 'I', 'my', 'we'.\n"
-            "- Reference specific experiences, not generic claims.\n\n"
+            "You are a scholarship selection committee member.\n\n"
+            "TONE: Personal, reflective, vivid. First person.\n"
+            "OUTPUT: 400-500 words. Narrative arc: Moment → Challenge → Growth → Vision.\n\n"
+            "STYLE RULES (from NotebookLM guide):\n"
+            "1. NARRATIVE SPECIFICITY: Strong essays tell a vivid story centered on "
+            "a 'moment, conversation, or challenge' that changed the writer's "
+            "perspective. BAD: 'I volunteered at a food bank.' GOOD: 'While "
+            "handing a box of produce to a grandmother, she told me it was the "
+            "first fresh fruit her grandson had seen in weeks.'\n"
+            "2. ABT TEMPLATE: AND (facts/context) → BUT (tension/challenge) → "
+            "THEREFORE (resolution/vision).\n"
+            "3. NO CLICHES: Avoid 'perseverance,' 'resilience,' 'hardworking,' "
+            "'since childhood,' 'passion for.' These cause eyes to glaze.\n"
+            "4. VIVID, SPECIFIC DETAILS: One concrete moment beats ten abstract "
+            "claims.\n"
+            "5. WEAVE DATA INTO NARRATIVE: Never write 'Past projects: X (2024): Y.' "
+            "Instead: 'My 2024 work on X, which resulted in Y, showed me...'\n\n"
             "FEW-SHOT EXAMPLES:\n"
-            "Good: 'My 2024 study on genomic surveillance, which informed WHO policy on "
-            "drug-resistant pathogens, revealed a deeper challenge...'\n"
-            "Bad: 'Past projects: Genomic Surveillance of Drug-Resistant Pathogens (2023): "
-            "WHO-funded, led to policy change.'\n"
-            "Good: 'As a PhD student at the University of Ghana, I've spent three years "
-            "confronting the computational barriers that limit healthcare in West Africa.'\n"
-            "Bad: 'Institution: University of Ghana. Level: PhD. Region: West Africa.'"
+            "Weak: 'I have always been passionate about helping others and have "
+            "demonstrated resilience throughout my academic career.'\n"
+            "Strong: 'The morning I watched my mother choose between bus fare and "
+            "breakfast for my sister, I understood that poverty isn't abstract — "
+            "it's a series of impossible calculations.'\n"
+            "Weak: 'My research on Topic X was published in Journal Y.'\n"
+            "Strong: 'When my paper on X was accepted, I thought relief — then "
+            "realized the real work was just starting: getting these findings into "
+            "the hands of people who could use them.'"
         ),
         "template": (
-            "Write a Personal Statement for:\n\n"
+            "Write a Personal Statement for:\n"
             "SCHOLARSHIP: {title} from {provider}\n"
             "ELIGIBILITY: {eligibility_summary}\n\n"
-            "APPLICANT (write AS this person):\n"
-            "- Name: {user_name}\n"
-            "- Institution: {institution}\n"
-            "- Field: {field}\n"
-            "- Level: {level}\n"
-            "- Region: {region}\n"
-            "- Past Projects: {past_projects_detail}\n"
-            "- Funding Needs: {funding_needs}\n\n"
-            "Write in first person. Weave all details into natural narrative — no structured "
-            "data dumps, no field labels, no bullet points in prose."
+            "APPLICANT (write AS this person, in first person):\n"
+            "Name: {user_name}\n"
+            "Institution: {institution}\n"
+            "Field: {field}\n"
+            "Level: {level}\n"
+            "Region: {region}\n"
+            "Past Projects: {past_projects_detail}\n"
+            "Funding Needs: {funding_needs}\n\n"
+            "Write a vivid narrative centered on a specific moment or challenge. "
+            "Use the AND-BUT-THEREFORE structure. No cliches. No data dumps."
         ),
     },
     "academic_goals": {
         "system": (
             "You are an academic advisor. TONE: Ambitious but grounded. "
-            "OUTPUT FORMAT: 300-400 words. Short-term / Medium-term / Long-term.\n\n"
+            "OUTPUT: 300-400 words. Short/Medium/Long-term.\n\n"
             "RULES:\n"
-            "- Never write 'Level: Masters' or 'Field: X'. Instead: 'As a masters student "
-            "in X...' or 'Building on my training in X...'"
+            "- Refutable claims: 'Publish in top-tier venues by Year 2' not "
+            "'Advance the field.'\n"
+            "- No hedge words. Be declarative."
         ),
         "template": (
             "Write Academic Goals for:\n"
-            "- Scholarship: {title} from {provider}\n"
-            "- Applicant: {user_name}, {level} in {field} at {institution}\n"
-            "- Past work: {past_projects_detail}\n\n"
-            "Write the section now. Natural prose only."
+            "Scholarship: {title} from {provider}\n"
+            "Applicant: {user_name}, {level} in {field} at {institution}\n"
+            "Past work: {past_projects_detail}\n\n"
+            "Write now. Specific, measurable goals only."
         ),
     },
     "leadership_experience": {
         "system": (
-            "You are a leadership evaluator. TONE: Evidence-based, impact-focused. "
-            "OUTPUT FORMAT: 250-350 words. STAR format.\n\n"
+            "You are a leadership evaluator. TONE: Evidence-based. "
+            "OUTPUT: 250-350 words. STAR format.\n\n"
             "RULES:\n"
-            "- Never list project titles as data. Instead, describe what you DID in those "
-            "projects and what CHANGED as a result."
+            "- Narrative specificity: describe ONE vivid moment that captures "
+            "your leadership, not a list of roles.\n"
+            "- Fact-driven proof: quantify impact."
         ),
         "template": (
             "Write Leadership Experience for:\n"
-            "- Scholarship: {title} from {provider}\n"
-            "- Applicant: {user_name}, {level} in {field} at {institution}, {region}\n"
-            "- Projects: {past_projects_detail}\n\n"
-            "Write the section now."
+            "Scholarship: {title} from {provider}\n"
+            "Applicant: {user_name}, {level} in {field}, {institution}, {region}\n"
+            "Projects: {past_projects_detail}\n\n"
+            "Write now. Tell a story, don't list credentials."
         ),
     },
     "recommendation_notes": {
         "system": (
-            "You are an academic mentor. TONE: Professional, advocacy-oriented. "
-            "OUTPUT FORMAT: 200-300 words.\n\n"
+            "You are an academic mentor. TONE: Professional, specific. "
+            "OUTPUT: 200-300 words.\n\n"
             "RULES:\n"
-            "- Never state the scholarship's eligibility criteria as a list. Instead: "
-            "'Given the scholarship's emphasis on X, this candidate's experience in Y makes "
-            "them an ideal fit.'"
+            "- Fact-driven proof: specific evidence, not vague praise.\n"
+            "- Refutable claims: 'This candidate's work on X demonstrated Y' not "
+            "'This candidate is excellent.'"
         ),
         "template": (
             "Write Recommendation Notes for:\n"
-            "- Scholarship: {title} from {provider}\n"
-            "- Their priorities: {eligibility_summary}\n"
-            "- Applicant: {user_name}, {level} in {field} at {institution}\n"
-            "- Research: {past_projects_detail}\n\n"
-            "Write the section now."
+            "Scholarship: {title} from {provider}\n"
+            "Priorities: {eligibility_summary}\n"
+            "Applicant: {user_name}, {level} in {field} at {institution}\n"
+            "Research: {past_projects_detail}\n\n"
+            "Write now. Specific evidence only."
+        ),
+    },
+    "essay_writing": {
+        "system": (
+            "You are a scholarship essay specialist.\n\n"
+            "TONE: Personal, vivid, persuasive. First person.\n"
+            "OUTPUT: 500-600 words. Structure: Hook → Context → Challenge → "
+            "Growth → Vision.\n\n"
+            "STYLE RULES:\n"
+            "1. NARRATIVE SPECIFICITY: Open with a concrete moment, not a "
+            "generalization.\n"
+            "2. ABT: AND (context) → BUT (tension) → THEREFORE (resolution).\n"
+            "3. NO CLICHES: Avoid 'passion,' 'perseverance,' 'resilience.'\n"
+            "4. SHOW, DON'T TELL: Describe what happened, not what you feel."
+        ),
+        "template": (
+            "Write a Scholarship Essay for:\n"
+            "Award: {title} from {provider}\n"
+            "Applicant: {user_name}, {level} in {field} at {institution}\n"
+            "Region: {region}\n"
+            "Past work: {past_projects_detail}\n\n"
+            "Write now. Start with a moment. No cliches."
         ),
     },
 }
 
 
 # ── Research Prompts ─────────────────────────────────────────────────────
+# Style guide principles: Cross-Axis Comparison, Intentional Citing,
+# Refutable Claims, Synthesis Not Listing
 
 RESEARCH_PROMPTS: dict[str, dict] = {
     "literature_review": {
         "system": (
-            "You are a senior researcher writing a literature review. "
-            "TONE: Scholarly, synthesis-oriented, critical.\n\n"
-            "OUTPUT FORMAT: 400-500 words. Thematic synthesis, not paper-by-paper listing.\n\n"
-            "CRITICAL RULES:\n"
-            "- NEVER list citations sequentially (e.g., 'Author1 (2024) found X. Author2 (2025) "
-            "found Y.'). This is the #1 anti-pattern.\n"
-            "- INSTEAD: Synthesize by THEME. Compare, contrast, and identify tensions between "
-            "sources. At least ONE sentence must explicitly contrast two or more cited works.\n"
-            "- Use (Author, Year) citation format.\n"
-            "- Every claim must reference a citation from the provided list.\n\n"
+            "You are a senior researcher writing a literature review.\n\n"
+            "TONE: Scholarly, synthesis-oriented, critical.\n"
+            "OUTPUT: 400-500 words. Thematic synthesis, not paper-by-paper.\n\n"
+            "STYLE RULES (from NotebookLM guide):\n"
+            "1. CROSS-AXIS COMPARISON: Compare sources based on their strengths "
+            "and weaknesses relative to each other. Example: 'While Brown (1960) "
+            "pioneered transactions in this field, their approach is limited by "
+            "high memory overhead, a gap this study addresses using a lighter "
+            "algorithm.'\n"
+            "2. INTENTIONAL CITING: Cite sources incidentally as you explain "
+            "concepts, not as the subject of sentences. BAD: 'Smith (2024) found X. "
+            "Lee (2025) found Y.' GOOD: 'The challenge of X (Smith, 2024) is "
+            "compounded by Y (Lee, 2025).'\n"
+            "3. SYNTHESIS, NOT LISTING: Group sources by argument, not by "
+            "publication date. At least ONE sentence must explicitly contrast "
+            "two or more sources.\n"
+            "4. REFUTABLE CLAIMS: Make specific assertions about what the "
+            "literature shows or fails to show.\n"
+            "5. NEVER LIST CITATIONS SEQUENTIALLY. This is the #1 anti-pattern.\n\n"
             "FEW-SHOT EXAMPLES:\n"
-            "Good: 'While Osei et al. (2024) demonstrated that deep learning can achieve "
-            "92% accuracy in malaria detection under controlled conditions, Chen & Wang (2025) "
-            "caution that transfer learning models trained on high-resource data degrade "
-            "significantly when deployed in sub-Saharan African settings — a tension this "
-            "project directly addresses.'\n"
-            "Bad: 'Osei et al. (2024) studied malaria detection. Chen & Wang (2025) studied "
-            "transfer learning. Patel & Singh (2024) discussed ethics.'\n"
-            "Good: 'A critical gap emerges when comparing the technical optimism of Chen & "
-            "Wang (2025) with the ethical caution of Patel & Singh (2024): neither addresses "
-            "how to implement AI diagnostics in health systems with limited digital "
-            "infrastructure.'\n"
-            "Bad: 'The literature shows gaps in the field.'"
+            "Weak: 'Smith (2024) studied X. Lee (2025) studied Y. Patel (2024) "
+            "studied Z.'\n"
+            "Strong: 'While Smith (2024) demonstrated that X works under controlled "
+            "conditions, Lee (2025) shows this finding degrades in real-world "
+            "settings — a tension Patel (2024) attributes to ignored ethical "
+            "constraints.'\n"
+            "Weak: 'The literature shows gaps in the field.'\n"
+            "Strong: 'Neither the technical advances of Smith (2024) nor the "
+            "ethical frameworks of Patel (2024) address the deployment reality "
+            "documented by Lee (2025).'"
         ),
         "template": (
-            "Write a Literature Review for:\n\n"
+            "Write a Literature Review for:\n"
             "PROPOSAL: {title}\n"
             "RESEARCHER: {user_name}, {field}, {institution}\n"
             "Past work: {past_projects_detail}\n\n"
             "RETRIEVED CITATIONS:\n"
             "{citations_summary}\n\n"
-            "Write the review now. Synthesize thematically, compare sources explicitly, "
-            "identify gaps. Never list citations sequentially."
+            "Write the review. Synthesize by theme. Compare sources explicitly. "
+            "Never list citations sequentially."
         ),
     },
     "hypothesis": {
         "system": (
             "You are a research methodology expert. TONE: Precise, falsifiable. "
-            "OUTPUT FORMAT: 200-300 words. Hypothesis, sub-questions, framework.\n\n"
+            "OUTPUT: 200-300 words.\n\n"
             "RULES:\n"
-            "- Hypothesis must be falsifiable, not a vague goal.\n"
-            "- Ground in the provided literature."
+            "- Refutable claims: hypothesis must be falsifiable.\n"
+            "- Active voice: 'We hypothesize,' not 'It is hypothesized.'\n"
+            "- Ground in provided literature."
         ),
         "template": (
             "Write Hypothesis & Research Questions for:\n"
-            "- Proposal: {title}\n"
-            "- Researcher: {user_name}, {field}\n"
-            "- Literature context:\n{citations_summary}\n\n"
+            "Proposal: {title}, Researcher: {user_name}, {field}\n"
+            "Literature:\n{citations_summary}\n\n"
             "Write now."
         ),
     },
     "methodology": {
         "system": (
             "You are a research methods professor. TONE: Rigorous, reproducible. "
-            "OUTPUT FORMAT: 400-500 words. Design, Sample, Materials, Procedure, "
-            "Analysis, Ethics.\n\n"
+            "OUTPUT: 400-500 words.\n\n"
             "RULES:\n"
-            "- Justify each methodological choice with literature evidence.\n"
-            "- Reference retrieved citations for methodological precedent."
+            "- Imperative style for procedures.\n"
+            "- Justify each choice with literature evidence.\n"
+            "- Refutable claims about expected outcomes."
         ),
         "template": (
             "Write Methodology for:\n"
-            "- Proposal: {title}\n"
-            "- Field: {field}\n"
-            "- Institution: {institution}\n"
-            "- Literature:\n{citations_summary}\n\n"
+            "Proposal: {title}, Field: {field}, Institution: {institution}\n"
+            "Literature:\n{citations_summary}\n\n"
             "Write now."
         ),
     },
     "expected_outcomes": {
         "system": (
             "You are a research impact assessor. TONE: Concrete, measurable. "
-            "OUTPUT FORMAT: 250-350 words.\n\n"
+            "OUTPUT: 250-350 words.\n\n"
             "RULES:\n"
-            "- Outcomes must be specific and measurable, not aspirational."
+            "- Refutable claims: specific, measurable outcomes.\n"
+            "- Fact-driven proof: cite precedent from literature."
         ),
         "template": (
             "Write Expected Outcomes for:\n"
-            "- Proposal: {title}\n"
-            "- Provider: {provider}\n"
-            "- Field: {field}\n\n"
+            "Proposal: {title}, Provider: {provider}, Field: {field}\n\n"
+            "Write now."
+        ),
+    },
+    "essay_writing": {
+        "system": (
+            "You are an academic essay writer for research contexts.\n\n"
+            "TONE: Scholarly, analytical, evidence-based.\n"
+            "OUTPUT: 400-500 words. Structure: Thesis → Evidence → Analysis → "
+            "Implications.\n\n"
+            "STYLE RULES:\n"
+            "1. REFUTABLE CLAIMS: Make specific assertions.\n"
+            "2. INTENTIONAL CITING: Cite incidentally, not as sentence subjects.\n"
+            "3. CROSS-AXIS COMPARISON: Contrast viewpoints."
+        ),
+        "template": (
+            "Write a Research Essay for:\n"
+            "Topic: {title}\n"
+            "Field: {field}, Researcher: {user_name}\n"
+            "Citations:\n{citations_summary}\n\n"
+            "Write now."
+        ),
+    },
+    "technical_report": {
+        "system": (
+            "You are a technical report writer for research.\n\n"
+            "TONE: Precise, reproducible, structured.\n"
+            "OUTPUT: 500-600 words. Sections: Introduction, Methods, Results "
+            "(placeholder), Discussion, Conclusions.\n\n"
+            "STYLE RULES:\n"
+            "1. IMPERATIVE for methods.\n"
+            "2. REFUTABLE CLAIMS in discussion.\n"
+            "3. Logical figure walkthroughs."
+        ),
+        "template": (
+            "Write a Technical Report for:\n"
+            "Project: {title}\n"
+            "Field: {field}, Institution: {institution}\n"
+            "Researcher: {user_name}\n\n"
+            "Write now."
+        ),
+    },
+    "practical_report": {
+        "system": (
+            "You are a practical/lab report writer.\n\n"
+            "TONE: Observational, methodical.\n"
+            "OUTPUT: 400-500 words. Sections: Objective, Materials, Procedure, "
+            "Observations, Analysis, Conclusions.\n\n"
+            "STYLE RULES:\n"
+            "1. IMPERATIVE for procedures.\n"
+            "2. FACT-DRIVEN for observations.\n"
+            "3. Specific quantities and conditions."
+        ),
+        "template": (
+            "Write a Practical Report for:\n"
+            "Objective: {title}\n"
+            "Field: {field}, Researcher: {user_name}\n\n"
             "Write now."
         ),
     },
@@ -314,9 +473,9 @@ def _build_enriched_context(context: dict) -> dict:
             parts.append(f"Minimum GPA: {eligibility['gpa']}")
         if "region" in eligibility:
             parts.append(f"Eligible regions: {eligibility['region']}")
-        enriched["eligibility_summary"] = "; ".join(parts) if parts else "Open to all qualified applicants"
+        enriched["eligibility_summary"] = "; ".join(parts) if parts else "Open"
     else:
-        enriched["eligibility_summary"] = "Open to all qualified applicants"
+        enriched["eligibility_summary"] = "Open"
 
     field_tags = context.get("field_tags") or []
     enriched["field_tags"] = ", ".join(field_tags) if field_tags else "interdisciplinary"
@@ -326,14 +485,14 @@ def _build_enriched_context(context: dict) -> dict:
         details = []
         for p in past_projects[:3]:
             if isinstance(p, dict):
-                title = p.get("title", "Untitled")
-                year = p.get("year", "n/a")
-                outcome = p.get("outcome", "")
-                details.append(f"- \"{title}\" ({year}): {outcome}" if outcome else f"- \"{title}\" ({year})")
-        enriched["past_projects_detail"] = "\n".join(details) if details else "No specific projects listed"
+                t = p.get("title", "Untitled")
+                y = p.get("year", "n/a")
+                o = p.get("outcome", "")
+                details.append(f"- \"{t}\" ({y}): {o}" if o else f"- \"{t}\" ({y})")
+        enriched["past_projects_detail"] = "\n".join(details) if details else "None"
         enriched["past_projects_first"] = past_projects[0].get("title", "previous work") if past_projects else "previous work"
     else:
-        enriched["past_projects_detail"] = context.get("past_projects", "No specific projects listed")
+        enriched["past_projects_detail"] = context.get("past_projects", "None")
         enriched["past_projects_first"] = context.get("past_projects", "previous work")
 
     citations = context.get("citations") or []
@@ -346,333 +505,444 @@ def _build_enriched_context(context: dict) -> dict:
                 title = c.get("title", "Untitled")
                 journal = c.get("journal", "")
                 cit_lines.append(f"{i}. {', '.join(authors)} ({year}). {title}. {journal}.")
-        enriched["citations_summary"] = "\n".join(cit_lines) if cit_lines else "No citations available"
+        enriched["citations_summary"] = "\n".join(cit_lines) if cit_lines else "None"
     else:
-        enriched["citations_summary"] = context.get("citations_text", "No citations available")
+        enriched["citations_summary"] = context.get("citations_text", "None")
 
     enriched["user_name"] = context.get("user_name", "the applicant")
-
     return enriched
 
 
 # ── Mock Content Generators ──────────────────────────────────────────────
 
 def _mock_content(section_type: str, track_type: str, context: dict) -> list[str]:
-    """Return structured sentences for the given section."""
-    enriched = _build_enriched_context(context)
-    title = enriched.get("title", "this program")
-    provider = enriched.get("provider", "the funding body")
-    field = enriched.get("field", "their field")
-    institution = enriched.get("institution", "their institution")
-    level = enriched.get("level", "graduate student")
-    region = enriched.get("region", "their region")
-    user_name = enriched.get("user_name", "the applicant")
-    award = enriched.get("award_range", "competitive award")
-    deadline = enriched.get("deadline", "TBD")
-    field_tags = enriched.get("field_tags", "")
-    past_detail = enriched.get("past_projects_detail", "no specific projects")
-    past_first = enriched.get("past_projects_first", "previous work")
-    citations = enriched.get("citations_summary", "no citations available")
-    eligibility = enriched.get("eligibility_summary", "open")
+    """Return structured sentences following NotebookLM style principles."""
+    e = _build_enriched_context(context)
+    title = e.get("title", "this program")
+    provider = e.get("provider", "the funding body")
+    field = e.get("field", "their field")
+    institution = e.get("institution", "their institution")
+    level = e.get("level", "graduate student")
+    region = e.get("region", "their region")
+    user_name = e.get("user_name", "the applicant")
+    award = e.get("award_range", "competitive award")
+    deadline = e.get("deadline", "TBD")
+    field_tags = e.get("field_tags", "")
+    past_detail = e.get("past_projects_detail", "no specific projects")
+    past_first = e.get("past_projects_first", "previous work")
+    citations = e.get("citations_summary", "no citations")
+    eligibility = e.get("eligibility_summary", "open")
 
     sentences: dict[str, list[str]] = {
-        # ── GRANT SECTIONS ──
+        # ── GRANT ──
         "technical_approach": [
-            f"This proposal responds directly to {provider}'s call for advancing "
-            f"{field_tags} research — priorities that align with {user_name}'s established "
-            f"expertise at {institution}.",
+            f"This project advances {provider}'s mission to strengthen {field_tags} "
+            f"capacity — and {user_name}'s track record at {institution} makes her "
+            f"the right person to execute it.",
 
-            f"The applicant's doctoral training in {field} and demonstrated track record — "
-            f"including {past_first} — provides the technical foundation required for this "
-            f"scope of work. Her qualifications satisfy the funder's requirements for "
-            f"independent investigators with publication records in high-impact venues.",
+            f"AND: {provider} has identified {field_tags} as priority areas, AND the "
+            f"applicant brings doctoral training in {field} with published results "
+            f"in high-impact venues. BUT: current approaches in {region} suffer from "
+            f"limited computational infrastructure and fragmented data — a gap her "
+            f"work directly addresses. THEREFORE, this project proposes a three-phase "
+            f"methodology designed for {region}'s specific constraints.",
 
-            f"The methodology proceeds in three phases. Phase 1 (Months 1-6): computational "
-            f"framework development and baseline establishment at {institution}, informed by "
-            f"a systematic review of {field_tags} approaches. Phase 2 (Months 7-12): core "
-            f"research execution with iterative validation against real-world datasets from "
-            f"{region}. Phase 3 (Months 13-18): prototype refinement, benchmarking against "
-            f"state-of-the-art, and preparation of deliverables for {provider}.",
+            f"Phase 1 (Months 1-6): computational framework development and baseline "
+            f"establishment at {institution}, using {field_tags} methods validated in "
+            f"the applicant's prior work on {past_first}. Phase 2 (Months 7-12): core "
+            f"research execution with iterative validation against real-world datasets "
+            f"from {region}. Phase 3 (Months 13-18): prototype refinement and "
+            f"deliverables for {provider}.",
 
-            f"Validation employs a mixed-methods approach: quantitative performance metrics "
-            f"(accuracy, sensitivity, specificity) benchmarked against existing tools, "
-            f"supplemented by expert review from collaborators in {region}. This dual "
-            f"validation strategy ensures reproducibility and clinical relevance.",
+            f"Validation employs mixed-methods: quantitative benchmarks (accuracy, "
+            f"sensitivity, specificity) against existing tools, plus expert review "
+            f"from {region}-based collaborators. Risk mitigation includes quarterly "
+            f"advisory board reviews aligned with {provider}'s reporting cadence.",
 
-            f"Risk mitigation is embedded at each phase gate. A quarterly advisory board "
-            f"review — the first at month 6, aligned with {provider}'s interim reporting "
-            f"cadence — provides course-correction opportunity. Contingency protocols "
-            f"address data access disruptions, a known challenge in {region}-based research.",
+            f"The expected outcome is a validated {field_tags} framework that "
+            f"performs at or above state-of-the-art on {region} data — a concrete, "
+            f"testable claim this project is designed to prove or refute.",
         ],
         "budget_justification": [
-            f"The proposed total of {award} reflects a lean, focused budget designed to "
-            f"maximize research output per dollar invested. Personnel costs (45%) cover one "
-            f"full-time postdoctoral researcher and partial salary support for {user_name}, "
-            f"justified by the computational complexity of the {field} analyses.",
+            f"The proposed budget of {award} falls within {provider}'s specified "
+            f"range and reflects a lean allocation optimized for research output.",
 
-            f"Equipment (15%) funds dedicated high-performance computing resources essential "
-            f"for training and validating the models proposed — standard GPU clusters "
-            f"available at {institution} are insufficient for the scale of this work.",
+            f"Personnel (45%): One full-time postdoctoral researcher and partial "
+            f"PI salary — justified by the computational complexity of {field} "
+            f"analyses requiring dedicated expertise.",
 
-            f"Travel (10%) supports two conference presentations and one in-person "
-            f"collaborative meeting with {provider}-affiliated partners, enabling "
-            f"knowledge transfer and early-stage feedback on preliminary results.",
+            f"Equipment (15%): High-performance computing resources beyond "
+            f"{institution}'s standard clusters, essential for the scale of "
+            f"this work.",
 
-            f"Other Direct Costs (15%) include open-access publication fees, cloud computing "
-            f"for reproducibility, and participant costs for validation studies with "
-            f"clinical partners in {region}.",
+            f"Travel (10%): Two conference presentations and one collaborative "
+            f"meeting with {provider}-affiliated partners.",
 
-            f"Indirect Costs (15%) are calculated at {institution}'s federally negotiated "
-            f"rate, covering facilities, administration, and shared infrastructure.",
+            f"Other Direct Costs (15%): Open-access fees, cloud computing for "
+            f"reproducibility, and clinical validation participant costs.",
+
+            f"Indirect Costs (15%): At {institution}'s federally negotiated rate.",
         ],
         "impact_sdg": [
-            f"This project directly advances SDG 4 (Quality Education) by developing "
-            f"open-access {field} tools and training materials that will benefit "
-            f"researchers and practitioners across {region}.",
+            f"This project advances SDG 4 (Quality Education) by developing "
+            f"open-access {field} tools for researchers and practitioners "
+            f"across {region}.",
 
-            f"The work also contributes to SDG 9 (Innovation) through the creation of "
-            f"novel analytical frameworks that address the specific computational "
-            f"challenges identified by {provider} in their funding priorities.",
+            f"It also contributes to SDG 9 (Innovation) through novel analytical "
+            f"frameworks aligned with {provider}'s identified priorities.",
 
-            f"A third contribution maps to SDG 3 (Good Health) via the clinical "
-            f"applications of the {field_tags} research outputs, particularly for "
-            f"underserved populations in {region}.",
+            f"A third contribution maps to SDG 3 (Good Health) via clinical "
+            f"applications for underserved populations in {region}.",
 
-            f"Measurable indicators include: (1) open-source tools deployed with "
-            f"documented adoption, (2) researchers trained through associated workshops, "
-            f"and (3) policy recommendations submitted to relevant governance bodies.",
+            f"In our pilot work, 80% of regional collaborators reported that "
+            f"existing tools fail in their contexts — demonstrating a specific, "
+            f"measurable unmet need this project addresses.",
         ],
         "project_timeline": [
-            f"Phase 1 (Months 1-6): Literature synthesis, tool development, and baseline "
-            f"establishment. Deliverable: Technical specification document and initial "
-            f"prototype architecture. Go/no-go: advisory board review at month 6.",
+            f"Phase 1 (Months 1-6): Literature synthesis, tool development, "
+            f"baseline establishment. Deliverable: Technical specification. "
+            f"Go/no-go: advisory board review at month 6.",
 
-            f"Phase 2 (Months 7-12): Core research execution with iterative data collection "
-            f"and preliminary analysis. Deliverable: Working prototype validated on "
-            f"benchmark datasets, interim report to {provider}.",
+            f"Phase 2 (Months 7-12): Core research execution, iterative data "
+            f"collection. Deliverable: Working prototype, interim report to "
+            f"{provider}.",
 
-            f"Phase 3 (Months 13-18): Advanced analysis, validation studies with clinical "
-            f"partners, and manuscript preparation. Deliverable: Two peer-reviewed "
-            f"submissions to top-tier {field} venues.",
+            f"Phase 3 (Months 13-18): Advanced analysis, validation studies. "
+            f"Deliverable: Two peer-reviewed submissions.",
 
-            f"Phase 4 (Months 19-24): Knowledge dissemination, policy briefs, final "
-            f"reporting. Deliverable: Open-source toolkit release, policy document for "
-            f"{region} stakeholders, and final report to {provider}.",
+            f"Phase 4 (Months 19-24): Dissemination, policy briefs, final "
+            f"reporting. Deliverable: Open-source toolkit, policy document, "
+            f"final report.",
 
-            f"Critical dependencies: Phase 2 cannot begin without Phase 1's technical "
-            f"specification; Phase 3 requires Phase 2's validated prototype. Reporting "
-            f"deadlines align with {provider}'s 12-month and 24-month milestones.",
+            f"All deliverables submit before {provider}'s 12-month and "
+            f"24-month reporting deadlines.",
         ],
-        # ── SCHOLARSHIP SECTIONS ──
+        "essay_writing": [
+            f"{provider}'s call for {field_tags} research identifies a gap that "
+            f"{user_name} has spent her career at {institution} working to close.",
+
+            f"AND: She has published in high-impact venues and led collaborative "
+            f"projects in {region}. BUT: The tools she and her peers have built "
+            f"consistently underperform when deployed outside laboratory conditions "
+            f" — a problem the field has acknowledged but not solved. THEREFORE, "
+            f"this project proposes a deployment-first methodology that inverts "
+            f"the typical research sequence.",
+
+            f"Instead of building in the lab and testing in the field, she will "
+            f"co-design with {region} health workers from day one — ensuring the "
+            f"final product meets the constraints of the contexts where it's "
+            f"most needed.",
+
+            f"The expected outcome is a validated framework that performs at or "
+            f"above state-of-the-art on {region} data, plus a methodology "
+            f"blueprint other {field} teams can replicate.",
+
+            f"This is not just a research project. It's a direct investment in "
+            f"{provider}'s mission: building {field} capacity where it matters "
+            f"most.",
+        ],
+        "technical_report": [
+            f"Introduction: {field} methods have shown promise in healthcare "
+            f"applications, but deployment in {region} remains limited by "
+            f"infrastructure constraints.",
+
+            f"Methods: This study employs a three-phase design: framework "
+            f"development at {institution}, iterative validation with {region} "
+            f"datasets, and benchmarking against existing tools.",
+
+            f"Data Collection: [To be completed during project execution. "
+            f"Minimum 10,000 labeled cases across 3 sites in {region}.]",
+
+            f"Analysis: Paired statistical comparisons with Bonferroni "
+            f"correction. Primary endpoint: diagnostic accuracy vs. "
+            f"state-of-the-art baseline.",
+
+            f"Discussion: The methodology addresses the gap between bench-top "
+            f"performance and deployment reality identified in the literature.",
+
+            f"Conclusions: This report establishes the protocol for a study "
+            f"designed to produce refutable evidence about {field} performance "
+            f"in {region}.",
+        ],
+        "practical_report": [
+            f"Objective: Evaluate {field} methods for healthcare applications "
+            f"in {region} under realistic deployment conditions.",
+
+            f"Materials: Computational resources at {institution}, clinical "
+            f"datasets from {region} partners, benchmark comparison tools.",
+
+            f"Procedure: (1) Configure baseline models using validated "
+            f"architectures. (2) Run against {region} test datasets. "
+            f"(3) Record accuracy, latency, and resource consumption.",
+
+            f"Observations: [To be completed during execution. Expected: "
+            f"performance degradation in low-resource settings consistent "
+            f"with prior findings.]",
+
+            f"Analysis: Compare observed performance against published "
+            f"benchmarks. Quantify degradation magnitude.",
+
+            f"Conclusions: [To be completed. Will document whether "
+            f"context-adapted methods maintain clinically acceptable "
+            f"performance thresholds.]",
+        ],
+        # ── SCHOLARSHIP ──
         "personal_statement": [
-            f"Growing up in {region}, I watched my mother navigate a healthcare system "
-            f"that lacked the computational tools to track disease outbreaks in real time. "
-            f"That experience — watching a preventable crisis unfold because data arrived "
-            f"too late — is what drew me to {field}.",
+            f"The morning I watched my mother choose between bus fare and "
+            f"breakfast for my sister, I understood that poverty isn't abstract — "
+            f"it's a series of impossible calculations. That moment, in {region}, "
+            f"is why I study {field}.",
 
-            f"At {institution}, I've spent the past three years building the skills to "
-            f"change that. My 2024 project on {past_first} showed me both the promise and "
-            f"the complexity of applying {field} methods in resource-limited settings. "
-            f"That work, which {past_detail.split(':')[-1].strip() if ':' in past_detail else 'received strong recognition'}, "
-            f"taught me that the hardest problems aren't technical — they're about "
-            f"access, equity, and making sure the tools we build actually reach the "
-            f"communities that need them.",
+            f"AND: I've spent three years at {institution} building the skills to "
+            f"change this. My work on {past_first} {past_detail.split(':')[-1].strip() if ':' in past_detail else ''} — "
+            f"but the real lesson wasn't technical. It was watching a prototype "
+            f"fail in the field because we'd built it for lab conditions, not for "
+            f"the clinics where it was needed most.",
 
-            f"I've also learned that meaningful change requires more than papers. Through "
-            f"community workshops and mentoring junior researchers, I've seen how "
-            f"capacity-building amplifies the impact of any single research project.",
+            f"BUT: Every tool I've built has taught me something the next one "
+            f"needs. The gap between what works in theory and what works in "
+            f"{region} is not a failure — it's the problem worth solving. "
+            f"THEREFORE, I'm applying to {title} at {provider} because this "
+            f"scholarship funds the specific work my community needs.",
 
-            f"The {title} from {provider} represents more than financial support. It's "
-            f"recognition that the questions I'm asking — about how {field} can serve "
-            f"underserved populations — matter. With this scholarship, I can dedicate "
-            f"my full attention to the work that my community needs, without the "
-            f"financial constraints that have shaped every decision I've made so far.",
+            f"When my paper on {past_first} was accepted, I felt relief — then "
+            f"realized the harder work was just starting: getting these findings "
+            f"into the hands of people who could use them.",
 
-            f"My goal is specific: I want to build {field} tools that work in the "
-            f"contexts where they're most needed, starting with {region}. This "
-            f"scholarship is the bridge between where I am and where that work requires "
-            f"me to be.",
+            f"This scholarship isn't financial support. It's the bridge between "
+            f"where I am and where that work requires me to be.",
         ],
         "academic_goals": [
-            f"Short-term (1-2 years): Complete advanced coursework in {field} at "
-            f"{institution}, with a focus on the computational methods most relevant "
-            f"to challenges in {region}. I plan to publish findings from {past_first} "
-            f"in a high-impact venue, establishing a foundation for my doctoral research.",
+            f"Short-term (1-2 years): Publish findings from {past_first} in a "
+            f"top-tier venue by Q4 of Year 1. Complete advanced {field} coursework "
+            f"at {institution} with focus on {region}-specific applications.",
 
-            f"Medium-term (3-5 years): Launch an independent research program at the "
-            f"intersection of {field} and {region}-specific applications. Target: 3-5 "
-            f"publications in top-tier journals, one of which will present a validated "
-            f"tool or framework with documented real-world deployment.",
+            f"Medium-term (3-5 years): Launch an independent research program "
+            f"producing 3-5 publications and one validated tool with documented "
+            f"deployment in {region}.",
 
-            f"Long-term (5+ years): Lead an interdisciplinary team focused on equitable "
-            f"{field} innovation, with {provider}'s support as the foundation for this "
-            f"trajectory. I aim to establish a lab that bridges computational research "
-            f"and clinical implementation in {region}.",
+            f"Long-term (5+ years): Lead an interdisciplinary team at the "
+            f"intersection of {field} and {region} healthcare, with {provider}'s "
+            f"support as the foundation.",
 
-            f"The {title} from {provider} is the critical enabler. Without the financial "
-            f"security it provides, I would need to compromise on research scope or "
-            f"pursue commercially viable but less impactful work.",
+            f"Without {title}, I would need to pursue commercially viable but "
+            f"less impactful work. This scholarship is the specific enabler.",
         ],
         "leadership_experience": [
-            f"As lead researcher on {past_first}, I coordinated a team of four across "
-            f"two institutions at {institution}. That project taught me that leadership "
-            f"in research isn't about directing — it's about creating conditions where "
-            f"diverse expertise produces better outcomes than any individual could alone.",
+            f"On {past_first}, I coordinated a team of four across two "
+            f"institutions. The moment that defined my leadership philosophy "
+            f"came when a junior researcher proposed an approach I initially "
+            f"dismissed — and it turned out to be the breakthrough our project "
+            f"needed.",
 
-            f"Beyond formal roles, I initiated a community workshop series in {region} "
-            f"that brought {field} methods to researchers who lacked access to formal "
-            f"training. Over six months, we reached 150+ participants, and three of "
-            f"those workshops directly led to collaborative projects.",
+            f"I learned that day that leadership isn't about having the best "
+            f"ideas. It's about creating conditions where better ideas can "
+            f"emerge from anyone on the team.",
 
-            f"My leadership philosophy centers on what I call 'distributed ownership' — "
-            f"giving team members genuine authority over their domains while maintaining "
-            f"alignment on shared goals. This approach proved especially effective when "
-            f"navigating the logistical challenges of cross-institutional research.",
+            f"Beyond formal roles, I started a workshop series in {region} that "
+            f"reached 150+ researchers. Three of those workshops led to "
+            f"collaborative projects — proof that distributed ownership works.",
 
-            f"I am eager to bring this leadership model to the {provider} community, "
-            f"where the caliber of peers would challenge me to grow while contributing "
-            f"my perspective on building research teams in resource-constrained settings.",
+            f"I will bring this model to the {provider} community: contribute "
+            f"my perspective on building research teams in resource-constrained "
+            f"settings, while learning from peers whose work challenges my "
+            f"assumptions.",
         ],
         "recommendation_notes": [
-            f"Academic Excellence: {user_name} consistently demonstrates the intellectual "
-            f"rigor and independent thinking that distinguish exceptional candidates. "
-            f"Her work in {field} at {institution} reflects both technical mastery and "
-            f"the ability to frame research questions that matter.",
+            f"Academic Excellence: {user_name} does not merely perform well — "
+            f"she reframes problems. Her work on {past_first} at {institution} "
+            f"changed how our group thinks about {field} in {region}.",
 
-            f"Research Potential: {past_first} — the project title speaks for itself — "
-            f"showed original thinking, methodological sophistication, and the ability "
-            f"to execute complex work independently. The outcomes (recognition and "
-            f"impact) confirm this wasn't a one-time success.",
+            f"Research Potential: This is not a one-time success. She "
+            f"consistently identifies the question behind the question — the "
+            f"gap that others miss. That habit is rare and valuable.",
 
-            f"Character: What sets {user_name} apart is her commitment to making {field} "
-            f"accessible. She has invested significant time in mentoring and community "
-            f"building — not because it advances her career, but because she believes "
-            f"the field is stronger when more people can participate.",
+            f"Character: What distinguishes {user_name} is her commitment to "
+            f"making {field} accessible. She invested significant time mentoring "
+            f"junior researchers — not for career advancement, but because she "
+            f"believes the field is stronger when more people participate.",
 
-            f"Fit for {title}: Given {provider}'s emphasis on {eligibility.split(';')[0].strip() if ';' in eligibility else 'academic excellence and impact'}, "
-            f"{user_name}'s background in {field} at {institution}, combined with her "
-            f"demonstrated leadership and vision for {region}, makes her an exceptional "
-            f"candidate for this award.",
+            f"Fit for {title}: Given {provider}'s priorities, her {field} "
+            f"expertise at {institution}, combined with demonstrated leadership "
+            f"in {region}, makes her an exceptional candidate.",
         ],
-        # ── RESEARCH SECTIONS ──
+        "essay_writing": [
+            f"The morning I watched my mother choose between bus fare and "
+            f"breakfast, I understood that poverty isn't a statistic — it's a "
+            f"series of impossible calculations.",
+
+            f"AND: I've spent three years at {institution} building skills in "
+            f"{field} to change this. BUT: Every tool I've built has failed in "
+            f"the field — because we designed for labs, not for the clinics "
+            f"where they're needed. THEREFORE, I'm applying to {title} at "
+            f"{provider} to fund the specific work my community requires.",
+
+            f"My paper on {past_first} was accepted last year. I felt relief — "
+            f"then realized the harder work was just starting: getting findings "
+            f"into the hands of people who could use them.",
+
+            f"This scholarship isn't financial support. It's the bridge between "
+            f"where I am and where that work requires me to be.",
+        ],
+        # ── RESEARCH ──
         "literature_review": [
-            f"The application of {field} methods to healthcare challenges in {region} "
-            f"has generated significant promise, yet a critical tension persists in the "
-            f"literature between technical capability and deployment reality.",
+            f"The application of {field} methods to healthcare in {region} "
+            f"generates significant promise, yet a critical tension persists "
+            f"between technical capability and deployment reality.",
 
-            f"Osei et al. (2024) demonstrated that deep learning architectures can "
-            f"achieve high accuracy in diagnostic applications, establishing a technical "
-            f"ceiling that suggests the methods are mature enough for clinical deployment. "
-            f"However, this optimism is complicated by Chen & Wang's (2025) finding that "
-            f"transfer learning models trained on high-resource data degrade substantially "
-            f"when applied to the low-resource settings characteristic of {region} — a "
-            f"direct challenge to the generalizability of Osei et al.'s results.",
+            f"Osei et al. (2024) demonstrated that deep learning architectures "
+            f"achieve high accuracy in diagnostic applications under controlled "
+            f"conditions. However, this finding is directly challenged by Chen "
+            f"& Wang (2025), who show that transfer learning models trained on "
+            f"high-resource data degrade substantially in the low-resource "
+            f"settings characteristic of {region} — undermining the "
+            f"generalizability of Osei et al.'s results.",
 
-            f"This tension between bench-top performance and real-world applicability "
-            f"is further sharpened by Patel & Singh (2024), who argue that even technically "
-            f"successful AI health tools may fail if deployed without robust ethical "
-            f"frameworks. Their analysis suggests that the gap is not merely technical "
-            f"but structural: current AI health research optimizes for accuracy metrics "
-            f"that may not align with the priorities of health systems in {region}.",
+            f"The tension deepens when Patel & Singh (2024) reframe the problem "
+            f"entirely: even technically successful AI tools may fail if deployed "
+            f"without robust ethical frameworks. Their analysis suggests the gap "
+            f"between Osei et al.'s optimism and Chen & Wang's caution is not "
+            f"merely technical but structural — current research optimizes for "
+            f"accuracy metrics that don't align with {region} health system "
+            f"priorities.",
 
-            f"Adeyemi & Brown (2023) provide the epidemiological grounding for this "
-            f"project, documenting the specific drug-resistant pathogen patterns in "
-            f"West Africa that make computational surveillance both urgent and uniquely "
+            f"Adeyemi & Brown (2023) provide the epidemiological grounding, "
+            f"documenting drug-resistant pathogen patterns in West Africa that "
+            f"make computational surveillance both urgent and uniquely "
             f"challenging. Their work establishes the public health need while "
-            f"implicitly highlighting the methodological gap: neither the technical "
-            f"advances of Osei et al. nor the ethical frameworks of Patel & Singh "
-            f"directly address how to build surveillance systems for contexts where "
-            f"data is sparse, fragmented, and geographically uneven.",
+            f"highlighting a methodological gap: neither the technical advances "
+            f"of Osei et al. nor the ethical frameworks of Patel & Singh "
+            f"directly address how to build surveillance systems for contexts "
+            f"where data is sparse and fragmented.",
 
-            f"This project occupies precisely that gap. By combining the computational "
-            f"methods validated by Osei et al. with the deployment-aware design "
-            f"principles advocated by Patel & Singh, and grounding the work in the "
-            f"epidemiological reality documented by Adeyemi & Brown, we aim to produce "
-            f"tools that are both technically sound and contextually appropriate for "
-            f"the health systems of {region}.",
+            f"This project occupies precisely that gap. By combining the "
+            f"computational methods validated by Osei et al. with the "
+            f"deployment-aware design principles advocated by Patel & Singh, "
+            f"and grounding the work in the epidemiological reality documented "
+            f"by Adeyemi & Brown, we aim to produce tools that are both "
+            f"technically sound and contextually appropriate for {region}.",
         ],
         "hypothesis": [
-            f"We hypothesize that integrating {field} approaches with context-specific "
-            f"adaptations for {region} will yield statistically significant improvements "
-            f"over models trained exclusively on high-resource data — specifically, "
-            f"we predict a minimum 30% improvement in diagnostic accuracy when evaluated "
-            f"on {region}-sourced datasets.",
+            f"We hypothesize that context-adapted {field} methods will maintain "
+            f"diagnostic accuracy above 85% when transferred from high-resource "
+            f"training data to {region} clinical datasets — a specific, testable "
+            f"claim that would refute the pessimism of Chen & Wang (2025) if "
+            f"confirmed.",
 
-            f"Primary research question: How can {field} techniques be systematically "
-            f"adapted to maintain performance when transferred from high-resource training "
-            f"environments to the low-resource deployment contexts characteristic of "
-            f"{region}?",
+            f"Primary research question: How can {field} techniques be "
+            f"systematically adapted to maintain performance when deployed in "
+            f"low-resource settings?",
 
-            f"Secondary questions include: (1) What representational features in training "
-            f"data most strongly predict performance degradation in transfer contexts? "
-            f"(2) Can domain adaptation methods developed for {field} reduce this "
-            f"degradation below clinically acceptable thresholds?",
+            f"Secondary questions: (1) Which representational features in "
+            f"training data predict transfer degradation? (2) Can domain "
+            f"adaptation reduce degradation below clinically acceptable "
+            f"thresholds?",
 
-            f"This framework is grounded in the transfer learning literature, which "
-            f"establishes both the potential and the limitations of cross-domain "
-            f"adaptation — and specifically in the gap identified by Chen & Wang (2025) "
+            f"This framework is grounded in the transfer learning literature "
+            f"and specifically in the gap identified by Chen & Wang (2025) "
             f"regarding African health contexts.",
         ],
         "methodology": [
-            f"This study employs a sequential mixed-methods design, structured in three "
-            f"phases to systematically address the transfer learning challenges identified "
-            f"in the literature.",
+            f"This study employs a sequential mixed-methods design in three "
+            f"phases.",
 
-            f"Phase 1 (Data Curation): We will assemble a multi-site dataset from "
-            f"clinical partners in {region}, ensuring representation across the "
-            f"geographic and demographic variables that Adeyemi & Brown (2023) identify "
-            f"as critical for surveillance accuracy. Sample size: minimum 10,000 "
-            f"labeled cases across 3 sites.",
+            f"Phase 1 (Data Curation): Assemble multi-site datasets from "
+            f"clinical partners in {region}, ensuring representation across "
+            f"the geographic variables Adeyemi & Brown (2023) identify as "
+            f"critical. Minimum 10,000 labeled cases across 3 sites.",
 
-            f"Phase 2 (Model Development): We will train baseline models using the "
-            f"architectures validated by Osei et al. (2024), then systematically "
-            f"evaluate domain adaptation techniques to address the performance "
-            f"degradation documented by Chen & Wang (2025). Analysis: paired "
-            f"statistical comparisons with Bonferroni correction.",
+            f"Phase 2 (Model Development): Train baseline models using "
+            f"architectures from Osei et al. (2024), then systematically "
+            f"evaluate domain adaptation techniques to address the degradation "
+            f"documented by Chen & Wang (2025). Analysis: paired statistical "
+            f"comparisons with Bonferroni correction.",
 
-            f"Phase 3 (Validation): Clinical validation with health workers in "
-            f"{region}, incorporating the ethical framework proposed by Patel & Singh "
-            f"(2024) to assess not just technical performance but deployment readiness. "
-            f"Qualitative evaluation using semi-structured interviews with 15+ "
-            f"clinicians.",
+            f"Phase 3 (Validation): Clinical validation with {region} health "
+            f"workers, incorporating the ethical framework from Patel & Singh "
+            f"(2024). Semi-structured interviews with 15+ clinicians.",
 
-            f"Ethical considerations include IRB approval at {institution}, informed "
-            f"consent protocols adapted for low-literacy populations, and data "
-            f"governance agreements with all participating sites in {region}.",
+            f"Ethical considerations: IRB approval at {institution}, informed "
+            f"consent for low-literacy populations, data governance agreements "
+            f"with all sites.",
         ],
         "expected_outcomes": [
-            f"We anticipate three primary categories of output. First, methodological "
-            f"contributions: 2-3 peer-reviewed publications documenting novel domain "
-            f"adaptation techniques that maintain diagnostic accuracy across resource "
-            f"settings — directly addressing the gap between Osei et al.'s (2024) "
-            f"bench-top results and Chen & Wang's (2025) deployment concerns.",
+            f"First, methodological: 2-3 peer-reviewed publications on domain "
+            f"adaptation techniques that maintain accuracy across resource "
+            f"settings — directly addressing the tension between Osei et al.'s "
+            f"(2024) results and Chen & Wang's (2025) concerns.",
 
-            f"Second, practical tools: an open-source diagnostic toolkit with documented "
-            f"performance characteristics in {region} contexts, designed for deployment "
-            f"by health ministries and NGOs. This addresses the 'last mile' problem "
-            f"identified by Patel & Singh (2024) — ensuring technically successful "
-            f"research translates into deployable solutions.",
+            f"Second, practical: an open-source toolkit with documented "
+            f"performance in {region}, designed for deployment by health "
+            f"ministries. This addresses the 'last mile' problem identified by "
+            f"Patel & Singh (2024).",
 
-            f"Third, policy impact: a policy brief for {provider} and {region} "
-            f"governance bodies articulating the specific infrastructure and training "
-            f"requirements for responsible AI deployment in low-resource health systems. "
-            f"This draws directly on the structural challenges documented by Adeyemi "
-            f"& Brown (2023).",
+            f"Third, policy: a brief for {provider} and {region} governance "
+            f"bodies on infrastructure requirements for responsible AI "
+            f"deployment, drawing on Adeyemi & Brown (2023).",
 
-            f"Knowledge dissemination will include conference presentations, a dedicated "
-            f"project website with open-access datasets, and partnerships with regional "
-            f"health organizations to ensure findings reach practitioners, not just "
-            f"researchers.",
+            f"Dissemination: conference presentations, open-access datasets, "
+            f"and partnerships with regional health organizations.",
+        ],
+        "essay_writing": [
+            f"The challenge of deploying {field} tools in {region} is not "
+            f"technical — it's structural.",
+
+            f"AND: Osei et al. (2024) showed these methods work in controlled "
+            f"settings. Chen & Wang (2025) showed they fail in the field. "
+            f"BUT: Neither addresses the deployment infrastructure gap. "
+            f"THEREFORE, this project inverts the typical sequence: we build "
+            f"with {region} health workers from day one.",
+
+            f"Patel & Singh (2024) argue that even successful AI tools fail "
+            f"without ethical frameworks. We take this further: the framework "
+            f"must be co-designed, not imposed.",
+
+            f"This is not a research project that might someday help people. "
+            f"It's a deployment project that starts with people and works "
+            f"backward to the research.",
+        ],
+        "technical_report": [
+            f"Introduction: {field} methods show promise for healthcare in "
+            f"{region}, but deployment remains limited.",
+
+            f"Methods: Three-phase design: framework development at "
+            f"{institution}, validation with {region} datasets, benchmarking "
+            f"against published baselines.",
+
+            f"Results: [To be completed during execution.]",
+
+            f"Discussion: The methodology addresses the gap between Osei et al.'s "
+            f"(2024) bench-top results and Chen & Wang's (2025) deployment "
+            f"concerns.",
+
+            f"Conclusions: This protocol establishes a reproducible approach "
+            f"for evaluating {field} in {region} contexts.",
+        ],
+        "practical_report": [
+            f"Objective: Evaluate {field} methods under realistic {region} "
+            f"deployment conditions.",
+
+            f"Materials: {institution} computational resources, {region} "
+            f"clinical datasets, benchmark tools.",
+
+            f"Procedure: (1) Configure baseline models. (2) Run against "
+            f"{region} test data. (3) Record accuracy, latency, resources.",
+
+            f"Observations: [To be completed during execution.]",
+
+            f"Analysis: Compare against published benchmarks. Quantify "
+            f"performance degradation.",
+
+            f"Conclusions: [To be completed. Will document whether "
+            f"context-adapted methods maintain acceptable thresholds.]",
         ],
     }
 
     return sentences.get(section_type, [
-        f"This section addresses {section_type.replace('_', ' ')} for the application "
-        f"titled \"{title}\" sponsored by {provider}.",
-        f"The applicant's background in {field} at {institution} provides a strong "
-        f"foundation for addressing the objectives outlined in this proposal.",
-        f"Key considerations include alignment with the program's priorities, "
-        f"demonstrated expertise, and the potential for meaningful impact.",
+        f"This section addresses {section_type.replace('_', ' ')} for "
+        f"\"{title}\" sponsored by {provider}.",
+        f"The applicant's background in {field} at {institution} provides "
+        f"a foundation for this work.",
     ])
 
 
