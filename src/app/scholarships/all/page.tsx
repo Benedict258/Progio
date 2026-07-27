@@ -2,7 +2,16 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { mockScholarshipMatches } from "@/lib/mock-data";
+interface ScholarshipOpportunity {
+  id: string;
+  title: string;
+  provider: string;
+  matchScore: number;
+  deadline: string;
+  matchReasons: string[];
+  track: "scholarship";
+  amount?: string;
+}
 import {
   GraduationCap,
   Calendar,
@@ -22,7 +31,7 @@ function OpportunityCard({
   saved,
   onToggleSave,
 }: {
-  opportunity: (typeof mockScholarshipMatches)[number];
+  opportunity: ScholarshipOpportunity;
   onStartApplication: (id: string) => void;
   saved: boolean;
   onToggleSave: () => void;
@@ -104,6 +113,8 @@ export default function AllScholarshipsPage() {
   const [creating, setCreating] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [scholarships, setScholarships] = useState<ScholarshipOpportunity[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const refreshSaved = useCallback(() => {
     setSavedIds(new Set(getSavedScholarships().map((s) => s.id)));
@@ -113,14 +124,44 @@ export default function AllScholarshipsPage() {
     refreshSaved();
   }, [refreshSaved]);
 
+  useEffect(() => {
+    async function fetchScholarships() {
+      try {
+        const res = await fetch(
+          "http://localhost:8000/api/opportunities/matches?user_id=user-001&type=scholarship"
+        );
+        if (!res.ok) throw new Error("API error");
+        const data = await res.json();
+        const mapped: ScholarshipOpportunity[] = data.matches.map(
+          (m: Record<string, unknown>) => ({
+            id: m.opportunity_id as string,
+            title: m.title as string,
+            provider: m.provider as string,
+            matchScore: Math.round(m.score as number),
+            deadline: m.deadline as string,
+            matchReasons: m.match_reasons as string[],
+            track: "scholarship" as const,
+            amount: (m.award_range as string) || undefined,
+          })
+        );
+        setScholarships(mapped);
+      } catch {
+        setScholarships([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchScholarships();
+  }, []);
+
   const filteredScholarships = searchQuery
-    ? mockScholarshipMatches.filter(
+    ? scholarships.filter(
         (opp) =>
           opp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           opp.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
           opp.matchReasons.some((r) => r.toLowerCase().includes(searchQuery.toLowerCase()))
       )
-    : mockScholarshipMatches;
+    : scholarships;
 
   const handleStartApplication = async (opportunityId: string) => {
     setCreating(opportunityId);
@@ -150,7 +191,7 @@ export default function AllScholarshipsPage() {
     }
   };
 
-  const handleToggleSave = (opp: (typeof mockScholarshipMatches)[number]) => {
+  const handleToggleSave = (opp: ScholarshipOpportunity) => {
     toggleScholarshipSaved({
       id: opp.id,
       title: opp.title,

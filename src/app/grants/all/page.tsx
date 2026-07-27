@@ -2,7 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { mockGrantMatches, type MatchOpportunity } from "@/lib/mock-data";
+interface MatchOpportunity {
+  id: string;
+  title: string;
+  provider: string;
+  matchScore: number;
+  deadline: string;
+  matchReasons: string[];
+  track: "grant" | "scholarship";
+  amount?: string;
+}
 import {
   FileText,
   Calendar,
@@ -149,7 +158,7 @@ export default function AllGrantsPage() {
         );
         setGrants(mapped);
       } catch {
-        setGrants(mockGrantMatches);
+        setGrants([]);
       } finally {
         setLoading(false);
       }

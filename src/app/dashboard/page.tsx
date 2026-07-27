@@ -19,16 +19,62 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GatedContent } from "@/components/GatedContent";
-import {
-  mockUser,
-  mockGrantMatches,
-  mockScholarshipMatches,
-  mockDeadlines,
-  mockApplications,
-  mockReadiness,
-  type MatchOpportunity,
-  type Deadline,
-} from "@/lib/mock-data";
+const mockUser = {
+  id: "user-001",
+  name: "Dr. Amara Osei",
+  fullName: "Dr. Amara Osei",
+  email: "amara.osei@ug.edu.gh",
+  institution: "University of Ghana",
+  department: "Computational Biology",
+  field: "Computational Biology",
+  profileCompletion: 100,
+  onboardingSteps: [
+    { label: "Complete Profile", completed: true },
+    { label: "Set Preferences", completed: true },
+    { label: "Browse Grants", completed: true },
+    { label: "Start Application", completed: true },
+    { label: "Take Assessment", completed: true },
+    { label: "Review Matches", completed: true },
+  ],
+};
+
+interface MatchOpportunity {
+  id: string;
+  title: string;
+  provider: string;
+  matchScore: number;
+  deadline: string;
+  matchReasons: string[];
+  track: "grant" | "scholarship";
+  amount?: string;
+}
+
+interface Deadline {
+  id: string;
+  title: string;
+  provider: string;
+  track: "grant" | "scholarship" | "research";
+  deadline: string;
+  daysRemaining: number;
+  applicationStatus: "not_started" | "in_progress" | "submitted";
+}
+
+interface Application {
+  id: string;
+  opportunityTitle: string;
+  track: "grant" | "scholarship" | "research";
+  status: "drafting" | "review" | "submitted" | "awarded" | "rejected";
+  lastEdited: string;
+  progress: number;
+}
+
+interface ReadinessAssessment {
+  id: string;
+  type: "grant" | "scholarship" | "research";
+  label: string;
+  completed: boolean;
+  score?: number;
+}
 
 const API_BASE = "http://localhost:8000";
 
@@ -550,7 +596,7 @@ function ApplicationsInProgressWidget({
   applications,
   loading,
 }: {
-  applications: typeof mockApplications;
+  applications: Application[];
   loading: boolean;
 }) {
   if (loading) {
@@ -590,7 +636,7 @@ function ApplicationsInProgressWidget({
     );
   }
 
-  const getHref = (app: (typeof mockApplications)[number]) => {
+  const getHref = (app: Application) => {
     if (app.track === "grant") return `/grants/applications/${app.id}`;
     if (app.track === "scholarship") return `/scholarships/applications/${app.id}`;
     return `/research/proposals/${app.id}`;
@@ -642,7 +688,7 @@ function ReadinessAssessmentWidget({
   assessments,
   loading,
 }: {
-  assessments: typeof mockReadiness;
+  assessments: ReadinessAssessment[];
   loading: boolean;
 }) {
   if (loading) {
@@ -793,11 +839,12 @@ export default function DashboardPage() {
 
   const [user, setUser] = useState(mockUser);
   const [profilePct, setProfilePct] = useState(mockUser.profileCompletion);
-  const [grants, setGrants] = useState<MatchOpportunity[]>(mockGrantMatches);
-  const [scholarships, setScholarships] = useState<MatchOpportunity[]>(mockScholarshipMatches);
-  const [deadlines, setDeadlines] = useState<Deadline[]>(mockDeadlines);
-  const [applications, setApplications] = useState<typeof mockApplications>(mockApplications);
-  const [readiness, setReadiness] = useState<typeof mockReadiness>(mockReadiness);
+  const [grants, setGrants] = useState<MatchOpportunity[]>([]);
+  const [scholarships, setScholarships] = useState<MatchOpportunity[]>([]);
+  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [readiness, setReadiness] = useState<ReadinessAssessment[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingMatches, setLoadingMatches] = useState(true);
@@ -819,9 +866,9 @@ export default function DashboardPage() {
           institution: data.institution || prev.institution,
           field: data.field_of_study || prev.field,
         }));
-        setProfilePct(data.profile_completion_pct ?? mockUser.profileCompletion);
+        setProfilePct(data.profile_completion_pct ?? 0);
       } catch {
-        // fallback to mockUser
+        // keep default state
       } finally {
         setLoadingProfile(false);
       }
@@ -891,7 +938,7 @@ export default function DashboardPage() {
           .sort((a: Deadline, b: Deadline) => a.daysRemaining - b.daysRemaining);
         setDeadlines(derivedDeadlines);
       } catch {
-        // fallback to mock data
+        // keep empty state
       } finally {
         setLoadingMatches(false);
       }
@@ -916,7 +963,7 @@ export default function DashboardPage() {
         }));
         setApplications(mapped);
       } catch {
-        // fallback to mockApplications
+        // keep empty state
       } finally {
         setLoadingProjects(false);
       }
@@ -940,7 +987,7 @@ export default function DashboardPage() {
           const completedTracks = new Map(
             data.map((r: { track: string; score: number }) => [r.track, r.score])
           );
-          const mapped: typeof mockReadiness = ["grant", "scholarship", "research"].map((track) => ({
+          const mapped: ReadinessAssessment[] = ["grant", "scholarship", "research"].map((track) => ({
             id: `r-${track}`,
             type: track as "grant" | "scholarship" | "research",
             label: trackLabels[track],
@@ -950,7 +997,7 @@ export default function DashboardPage() {
           setReadiness(mapped);
         }
       } catch {
-        // fallback to mockReadiness
+        // keep empty state
       } finally {
         setLoadingReadiness(false);
       }
@@ -1003,7 +1050,7 @@ export default function DashboardPage() {
 
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <GreetingHeader user={user} onboardingSteps={mockUser.onboardingSteps} />
+          <GreetingHeader user={user} onboardingSteps={user.onboardingSteps} />
         </div>
         <button
           onClick={handleExportPdf}
