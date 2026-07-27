@@ -125,11 +125,17 @@ async def generate_section(
         "institution": user.institution or "their institution",
         "level": user.level or "graduate student",
         "region": user.region or "global",
+        "user_name": user.name or "the applicant",
         "past_projects": ", ".join(
             p["title"] for p in (user.past_projects or []) if isinstance(p, dict) and "title" in p
         ) or "no specific projects listed",
+        "past_projects_raw": user.past_projects or [],
         "funding_needs": str(user.funding_needs) if user.funding_needs else "standard funding",
         "award_range": opportunity.award_range or "competitive award",
+        "deadline": opportunity.deadline.isoformat() if opportunity.deadline else "TBD",
+        "eligibility_criteria": opportunity.eligibility_criteria or {},
+        "field_tags": opportunity.field_tags or [],
+        "source_url": opportunity.source_url or "",
     }
 
     return StreamingResponse(
