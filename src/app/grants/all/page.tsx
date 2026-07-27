@@ -10,8 +10,8 @@ import {
   Sparkles,
   ArrowRight,
   Loader2,
+  Search,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 function OpportunityCard({
   opportunity,
@@ -71,9 +71,33 @@ function OpportunityCard({
   );
 }
 
+function EmptyState() {
+  return (
+    <div className="col-span-full bg-white rounded-xl border border-slate-200 p-12 text-center">
+      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Search size={24} className="text-slate-400" />
+      </div>
+      <h3 className="text-lg font-semibold text-slate-900 mb-2">No grants found</h3>
+      <p className="text-slate-500 max-w-md mx-auto">
+        Try adjusting your filters or check back later. New opportunities are added regularly.
+      </p>
+    </div>
+  );
+}
+
 export default function AllGrantsPage() {
   const router = useRouter();
   const [creating, setCreating] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredGrants = searchQuery
+    ? mockGrantMatches.filter(
+        (opp) =>
+          opp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          opp.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          opp.matchReasons.some((r) => r.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : mockGrantMatches;
 
   const handleStartApplication = async (opportunityId: string) => {
     setCreating(opportunityId);
@@ -112,20 +136,37 @@ export default function AllGrantsPage() {
         </p>
       </div>
 
+      <div className="mb-6">
+        <div className="relative">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search grants..."
+            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm"
+          />
+        </div>
+      </div>
+
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {mockGrantMatches.map((opp) => (
-          <div key={opp.id} className="relative">
-            {creating === opp.id && (
-              <div className="absolute inset-0 bg-white/80 rounded-xl z-10 flex items-center justify-center">
-                <Loader2 size={24} className="animate-spin text-indigo-600" />
-              </div>
-            )}
-            <OpportunityCard
-              opportunity={opp}
-              onStartApplication={handleStartApplication}
-            />
-          </div>
-        ))}
+        {filteredGrants.length === 0 ? (
+          <EmptyState />
+        ) : (
+          filteredGrants.map((opp) => (
+            <div key={opp.id} className="relative">
+              {creating === opp.id && (
+                <div className="absolute inset-0 bg-white/80 rounded-xl z-10 flex items-center justify-center">
+                  <Loader2 size={24} className="animate-spin text-indigo-600" />
+                </div>
+              )}
+              <OpportunityCard
+                opportunity={opp}
+                onStartApplication={handleStartApplication}
+              />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

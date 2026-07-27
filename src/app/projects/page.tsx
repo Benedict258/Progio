@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import {
   FolderOpen,
   Calendar,
@@ -293,11 +294,19 @@ export default function ProjectsPage() {
 
       {activeProjects.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
-          <FolderOpen size={48} className="mx-auto text-slate-300 mb-4" />
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FolderOpen size={24} className="text-slate-400" />
+          </div>
           <h3 className="text-lg font-semibold text-slate-900 mb-2">No Active Projects</h3>
           <p className="text-slate-500 max-w-md mx-auto">
-            When you mark an application as won, a project will be automatically created with milestones.
+            When you win a grant, it becomes a tracked project here with milestones, deliverables, and progress tracking.
           </p>
+          <Link
+            href="/grants/all"
+            className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+          >
+            Browse Grants <ArrowRight size={14} />
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">

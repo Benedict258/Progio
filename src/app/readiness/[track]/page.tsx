@@ -1,0 +1,321 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+
+interface Question {
+  id: string;
+  text: string;
+  options: string[];
+}
+
+interface CategoryBreakdown {
+  planning: number;
+  content: number;
+  logistics: number;
+  impact: number;
+}
+
+interface AssessmentResult {
+  id: string;
+  track: string;
+  score: number;
+  breakdown: CategoryBreakdown;
+  feedback: string;
+  action_items: string[];
+  responses: Record<string, string>;
+  completed_at: string | null;
+}
+
+const TRACK_LABELS: Record<string, string> = {
+  grant: "Grant Readiness",
+  scholarship: "Scholarship Readiness",
+  research: "Research Readiness",
+};
+
+function ScoreCircle({ score }: { score: number }) {
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const color = score >= 70 ? "#16a34a" : score >= 40 ? "#ca8a04" : "#dc2626";
+
+  return (
+    <div className="relative inline-flex items-center justify-center">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r={radius} fill="none" stroke="#e2e8f0" strokeWidth="10" />
+        <circle
+          cx="70"
+          cy="70"
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth="10"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transform="rotate(-90 70 70)"
+          className="transition-all duration-700"
+        />
+      </svg>
+      <span className="absolute text-3xl font-bold text-slate-900">{score.toFixed(0)}%</span>
+    </div>
+  );
+}
+
+function CategoryBar({ label, score }: { label: string; score: number }) {
+  const color = score >= 70 ? "bg-green-500" : score >= 40 ? "bg-yellow-500" : "bg-red-500";
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-sm">
+        <span className="font-medium text-slate-700">{label}</span>
+        <span className="text-slate-500">{score.toFixed(0)}%</span>
+      </div>
+      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${score}%` }} />
+      </div>
+    </div>
+  );
+}
+
+export default function ReadinessWizardPage() {
+  const params = useParams();
+  const track = (params.track as string) || "";
+
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<AssessmentResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!track) return;
+
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const qRes = await fetch(`http://localhost:8000/api/readiness/questions/${track}`);
+        if (!qRes.ok) throw new Error("Failed to load questions");
+        const qData = await qRes.json();
+        if (!cancelled) setQuestions(qData);
+      } catch {
+        if (!cancelled) setError("Failed to load questions. Please try again.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+
+      try {
+        const rRes = await fetch(`http://localhost:8000/api/readiness/results/default-user/${track}`);
+        if (rRes.ok) {
+          const rData = await rRes.json();
+          if (!cancelled) setResult(rData);
+        }
+      } catch {
+        // No existing result
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, [track]);
+
+  const handleAnswer = (questionId: string, answer: string) => {
+    setResponses((prev) => ({ ...prev, [questionId]: answer }));
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("http://localhost:8000/api/readiness/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: "default-user", track, responses }),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.detail || "Submission failed");
+      }
+      const data = await res.json();
+      setResult(data);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRetake = () => {
+    setResult(null);
+    setCurrentStep(0);
+    setResponses({});
+  };
+
+  if (!track) {
+    return (
+      <div className="p-8">
+        <div className="text-red-600">Invalid track specified.</div>
+        <Link href="/readiness" className="mt-4 inline-block text-blue-600 hover:underline">
+          Back to Assessments
+        </Link>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
+        <div className="text-slate-500">Loading questions...</div>
+      </div>
+    );
+  }
+
+  if (error && questions.length === 0) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">{error}</div>
+        <Link href="/readiness" className="mt-4 inline-block text-blue-600 hover:underline">
+          Back to Assessments
+        </Link>
+      </div>
+    );
+  }
+
+  if (result) {
+    const categories = [
+      { label: "Planning", score: result.breakdown.planning },
+      { label: "Content", score: result.breakdown.content },
+      { label: "Logistics", score: result.breakdown.logistics },
+      { label: "Impact", score: result.breakdown.impact },
+    ];
+
+    return (
+      <div className="p-8 max-w-2xl mx-auto">
+        <Link href="/readiness" className="text-sm text-blue-600 hover:underline mb-4 inline-block">
+          &larr; Back to Assessments
+        </Link>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">{TRACK_LABELS[track] || track} Results</h1>
+        <p className="text-slate-500 text-sm mb-6">
+          Completed {result.completed_at ? new Date(result.completed_at).toLocaleDateString() : "just now"}
+        </p>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6 flex flex-col items-center">
+          <ScoreCircle score={result.score} />
+          <p className="mt-3 text-slate-600 text-center text-sm max-w-md">{result.feedback}</p>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <h2 className="font-semibold text-slate-900 mb-4">Category Breakdown</h2>
+          <div className="space-y-3">
+            {categories.map((cat) => (
+              <CategoryBar key={cat.label} label={cat.label} score={cat.score} />
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <h2 className="font-semibold text-slate-900 mb-3">Action Items</h2>
+          <ul className="space-y-2">
+            {result.action_items.map((item, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                <span className="mt-0.5 text-blue-500">&#9679;</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <button
+          onClick={handleRetake}
+          className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors"
+        >
+          Retake Assessment
+        </button>
+      </div>
+    );
+  }
+
+  const question = questions[currentStep];
+  const total = questions.length;
+  const progress = ((currentStep + 1) / total) * 100;
+
+  return (
+    <div className="p-8 max-w-2xl mx-auto">
+      <Link href="/readiness" className="text-sm text-blue-600 hover:underline mb-4 inline-block">
+        &larr; Back to Assessments
+      </Link>
+      <h1 className="text-2xl font-bold text-slate-900 mb-1">{TRACK_LABELS[track] || track}</h1>
+      <p className="text-slate-500 text-sm mb-6">
+        Question {currentStep + 1} of {total}
+      </p>
+
+      <div className="h-1.5 bg-slate-100 rounded-full mb-8 overflow-hidden">
+        <div
+          className="h-full bg-blue-500 rounded-full transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm mb-4">{error}</div>
+      )}
+
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <p className="text-lg font-medium text-slate-900 mb-5">{question.text}</p>
+        <div className="space-y-3">
+          {question.options.map((opt) => (
+            <label
+              key={opt}
+              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                responses[question.id] === opt
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-slate-200 hover:border-slate-300"
+              }`}
+            >
+              <input
+                type="radio"
+                name={question.id}
+                value={opt}
+                checked={responses[question.id] === opt}
+                onChange={() => handleAnswer(question.id, opt)}
+                className="accent-blue-500"
+              />
+              <span className="capitalize text-slate-700">{opt}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={() => setCurrentStep((s) => Math.max(0, s - 1))}
+          disabled={currentStep === 0}
+          className="px-5 py-2.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          Previous
+        </button>
+
+        {currentStep < total - 1 ? (
+          <button
+            onClick={() => setCurrentStep((s) => s + 1)}
+            disabled={!responses[question.id]}
+            className="px-5 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Next
+          </button>
+        ) : (
+          <button
+            onClick={handleSubmit}
+            disabled={!responses[question.id] || submitting}
+            className="px-5 py-2.5 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {submitting ? "Submitting..." : "Submit Assessment"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}

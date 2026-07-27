@@ -15,12 +15,7 @@ import {
   ChevronRight,
   Menu,
   X,
-  Bell,
-  Bookmark,
-  Lock,
-  Search,
-  BookOpen,
-  Folder,
+  Rocket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +23,7 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
+  badge?: string;
   children?: { label: string; href: string }[];
 }
 
@@ -41,6 +37,7 @@ const navItems: NavItem[] = [
     label: "Grants",
     href: "/grants",
     icon: <FileText size={20} />,
+    badge: "3 new",
     children: [
       { label: "All Grants", href: "/grants" },
       { label: "Alerts", href: "/grants/alerts" },
@@ -93,6 +90,11 @@ const navItems: NavItem[] = [
     href: "/profile",
     icon: <User size={20} />,
   },
+  {
+    label: "Demo Flow",
+    href: "/demo",
+    icon: <Rocket size={20} />,
+  },
 ];
 
 function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string }) {
@@ -117,6 +119,11 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
         >
           {item.icon}
           <span className="flex-1 text-left">{item.label}</span>
+          {item.badge && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-indigo-600 text-white rounded-full">
+              {item.badge}
+            </span>
+          )}
           {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
         {expanded && item.children && (
@@ -153,6 +160,11 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
     >
       {item.icon}
       <span>{item.label}</span>
+      {item.badge && (
+        <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 bg-indigo-600 text-white rounded-full">
+          {item.badge}
+        </span>
+      )}
     </Link>
   );
 }

@@ -5,6 +5,8 @@ from app.api.applications import router as applications_router
 from app.api.opportunities import router as opportunities_router
 from app.api.profile import router as profile_router
 from app.api.projects import router as projects_router
+from app.api.readiness import router as readiness_router
+from app.api.research import router as research_router
 
 app = FastAPI(title="Progio API", version="0.1.0")
 
@@ -20,6 +22,8 @@ app.include_router(opportunities_router)
 app.include_router(profile_router)
 app.include_router(applications_router)
 app.include_router(projects_router)
+app.include_router(readiness_router)
+app.include_router(research_router)
 
 
 @app.get("/api/health")

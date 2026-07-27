@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Clock,
@@ -82,6 +84,33 @@ function statusLabel(status: string) {
   return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function EmptyState({
+  icon,
+  title,
+  description,
+}: {
+  icon: "grant" | "scholarship" | "research" | "general";
+  title: string;
+  description: string;
+}) {
+  const iconMap = {
+    grant: <FileText size={24} className="text-slate-400" />,
+    scholarship: <GraduationCap size={24} className="text-slate-400" />,
+    research: <FlaskConical size={24} className="text-slate-400" />,
+    general: <BookOpen size={24} className="text-slate-400" />,
+  };
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
+      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+        {iconMap[icon]}
+      </div>
+      <p className="text-sm font-medium text-slate-900 mb-1">{title}</p>
+      <p className="text-xs text-slate-500 max-w-xs mx-auto">{description}</p>
+    </div>
+  );
+}
+
 // ─── Widgets ────────────────────────────────────────────────────────────
 
 function GreetingHeader({ user }: { user: typeof mockUser }) {
@@ -98,7 +127,7 @@ function GreetingHeader({ user }: { user: typeof mockUser }) {
           Here&apos;s what&apos;s happening across your opportunities today.
         </p>
       </div>
-      <div className="flex items-center gap-3">
+      <Link href="/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
         <div className="text-sm text-slate-600">
           Quick start{" "}
           <span className="font-semibold text-indigo-600">
@@ -111,20 +140,27 @@ function GreetingHeader({ user }: { user: typeof mockUser }) {
             style={{ width: `${(completed / total) * 100}%` }}
           />
         </div>
-      </div>
+      </Link>
     </div>
   );
 }
 
-function GlobalSearch() {
+function GlobalSearch({ onSearch }: { onSearch: (query: string) => void }) {
   const [query, setQuery] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    onSearch(value);
+  };
+
   return (
     <div className="relative">
       <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
       <input
         type="text"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={handleChange}
         placeholder="Search grants, scholarships, research..."
         className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm"
       />
@@ -132,7 +168,15 @@ function GlobalSearch() {
   );
 }
 
-function MatchCard({ match }: { match: MatchOpportunity }) {
+function MatchCard({
+  match,
+  onStartApplication,
+}: {
+  match: MatchOpportunity;
+  onStartApplication: (id: string, track: "grant" | "scholarship") => void;
+}) {
+  const detailHref = match.track === "grant" ? `/grants/all` : `/scholarships/all`;
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-3">
@@ -172,15 +216,54 @@ function MatchCard({ match }: { match: MatchOpportunity }) {
           <Calendar size={12} />
           Deadline: {new Date(match.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
         </div>
-        <button className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-          View <ArrowRight size={12} />
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href={detailHref}
+            className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+          >
+            View <ArrowRight size={12} />
+          </Link>
+          <button
+            onClick={() => onStartApplication(match.id, match.track)}
+            className="text-xs font-medium px-2.5 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Start Application
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-function MatchingOpportunities() {
+function MatchingOpportunities({
+  searchQuery,
+  onStartApplication,
+}: {
+  searchQuery: string;
+  onStartApplication: (id: string, track: "grant" | "scholarship") => void;
+}) {
+  const filteredGrants = useMemo(() => {
+    if (!searchQuery) return mockGrantMatches;
+    const q = searchQuery.toLowerCase();
+    return mockGrantMatches.filter(
+      (m) =>
+        m.title.toLowerCase().includes(q) ||
+        m.provider.toLowerCase().includes(q) ||
+        m.matchReasons.some((r) => r.toLowerCase().includes(q))
+    );
+  }, [searchQuery]);
+
+  const filteredScholarships = useMemo(() => {
+    if (!searchQuery) return mockScholarshipMatches;
+    const q = searchQuery.toLowerCase();
+    return mockScholarshipMatches.filter(
+      (m) =>
+        m.title.toLowerCase().includes(q) ||
+        m.provider.toLowerCase().includes(q) ||
+        m.matchReasons.some((r) => r.toLowerCase().includes(q))
+    );
+  }, [searchQuery]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -189,9 +272,17 @@ function MatchingOpportunities() {
           <h3 className="text-sm font-semibold text-slate-900">Top Grant Matches</h3>
         </div>
         <div className="space-y-3">
-          {mockGrantMatches.map((m) => (
-            <MatchCard key={m.id} match={m} />
-          ))}
+          {filteredGrants.length === 0 ? (
+            <EmptyState
+              icon="grant"
+              title="No grants found"
+              description="Try adjusting your filters or check back later."
+            />
+          ) : (
+            filteredGrants.map((m) => (
+              <MatchCard key={m.id} match={m} onStartApplication={onStartApplication} />
+            ))
+          )}
         </div>
       </div>
 
@@ -201,9 +292,17 @@ function MatchingOpportunities() {
           <h3 className="text-sm font-semibold text-slate-900">Top Scholarship Matches</h3>
         </div>
         <div className="space-y-3">
-          {mockScholarshipMatches.map((m) => (
-            <MatchCard key={m.id} match={m} />
-          ))}
+          {filteredScholarships.length === 0 ? (
+            <EmptyState
+              icon="scholarship"
+              title="No scholarships found"
+              description="Complete your profile to improve matches."
+            />
+          ) : (
+            filteredScholarships.map((m) => (
+              <MatchCard key={m.id} match={m} onStartApplication={onStartApplication} />
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -216,6 +315,21 @@ function ClosingSoonWidget({ deadlines }: { deadlines: Deadline[] }) {
     [deadlines]
   );
 
+  const getHref = (d: Deadline) => {
+    if (d.applicationStatus === "in_progress") {
+      return d.track === "grant"
+        ? `/grants/applications/app-${d.id}`
+        : d.track === "scholarship"
+        ? `/scholarships/applications/app-${d.id}`
+        : `/research/proposals/app-${d.id}`;
+    }
+    return d.track === "grant"
+      ? "/grants/all"
+      : d.track === "scholarship"
+      ? "/scholarships/all"
+      : "/research/literature";
+  };
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
       <div className="flex items-center gap-2 mb-4">
@@ -224,8 +338,9 @@ function ClosingSoonWidget({ deadlines }: { deadlines: Deadline[] }) {
       </div>
       <div className="space-y-3">
         {sorted.map((d) => (
-          <div
+          <Link
             key={d.id}
+            href={getHref(d)}
             className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
           >
             <div className="flex-1 min-w-0">
@@ -250,7 +365,7 @@ function ClosingSoonWidget({ deadlines }: { deadlines: Deadline[] }) {
                 {getDaysLabel(d.daysRemaining)}
               </span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
@@ -303,13 +418,21 @@ function ProfileCompletionWidget({ user }: { user: typeof mockUser }) {
           <p className="text-sm text-slate-600">
             Complete your profile to improve match accuracy.
           </p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            <Sparkles size={14} />
-            AI Fill
-          </button>
+          <div className="flex items-center gap-2 mt-3">
+            <Link
+              href="/profile"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <Sparkles size={14} />
+              AI Fill
+            </Link>
+            <Link
+              href="/profile"
+              className="text-xs font-medium text-slate-600 hover:text-slate-900"
+            >
+              Complete Profile
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -360,10 +483,22 @@ function ApplicationsInProgressWidget({ applications }: { applications: typeof m
           <p className="text-sm text-slate-500 max-w-xs mx-auto">
             No applications yet. Start one from a match and the AI co-writer drafts the outline with you.
           </p>
+          <Link
+            href="/grants/all"
+            className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-indigo-600 hover:text-indigo-800"
+          >
+            Browse Grants <ArrowRight size={12} />
+          </Link>
         </div>
       </div>
     );
   }
+
+  const getHref = (app: (typeof mockApplications)[number]) => {
+    if (app.track === "grant") return `/grants/applications/${app.id}`;
+    if (app.track === "scholarship") return `/scholarships/applications/${app.id}`;
+    return `/research/proposals/${app.id}`;
+  };
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
@@ -373,9 +508,10 @@ function ApplicationsInProgressWidget({ applications }: { applications: typeof m
       </div>
       <div className="space-y-3">
         {applications.map((app) => (
-          <div
+          <Link
             key={app.id}
-            className="flex items-center justify-between p-3 rounded-lg bg-slate-50"
+            href={getHref(app)}
+            className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
           >
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-900 truncate">
@@ -399,7 +535,7 @@ function ApplicationsInProgressWidget({ applications }: { applications: typeof m
                 {statusLabel(app.status)}
               </span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
@@ -437,7 +573,8 @@ function ReadinessAssessmentWidget({
                 )}
               </div>
             </div>
-            <button
+            <Link
+              href={`/readiness/${a.type}`}
               className={cn(
                 "text-xs font-medium px-3 py-1.5 rounded-lg transition-colors",
                 a.completed
@@ -446,7 +583,7 @@ function ReadinessAssessmentWidget({
               )}
             >
               {a.completed ? "Retake" : "10 min · Take assessment"}
-            </button>
+            </Link>
           </div>
         ))}
       </div>
@@ -460,6 +597,21 @@ function DeadlinesDueSoonList({ deadlines }: { deadlines: Deadline[] }) {
     [deadlines]
   );
 
+  const getHref = (d: Deadline) => {
+    if (d.applicationStatus === "in_progress") {
+      return d.track === "grant"
+        ? `/grants/applications/app-${d.id}`
+        : d.track === "scholarship"
+        ? `/scholarships/applications/app-${d.id}`
+        : `/research/proposals/app-${d.id}`;
+    }
+    return d.track === "grant"
+      ? "/grants/all"
+      : d.track === "scholarship"
+      ? "/scholarships/all"
+      : "/research/literature";
+  };
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
       <div className="flex items-center gap-2 mb-4">
@@ -468,8 +620,9 @@ function DeadlinesDueSoonList({ deadlines }: { deadlines: Deadline[] }) {
       </div>
       <div className="space-y-2">
         {sorted.map((d) => (
-          <div
+          <Link
             key={d.id}
+            href={getHref(d)}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
           >
             <span
@@ -510,7 +663,7 @@ function DeadlinesDueSoonList({ deadlines }: { deadlines: Deadline[] }) {
                 {statusLabel(d.applicationStatus)}
               </span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
@@ -520,17 +673,60 @@ function DeadlinesDueSoonList({ deadlines }: { deadlines: Deadline[] }) {
 // ─── Main Dashboard ─────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [user] = useState(mockUser);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [creating, setCreating] = useState<string | null>(null);
+
+  const handleStartApplication = async (id: string, track: "grant" | "scholarship") => {
+    setCreating(id);
+    try {
+      const res = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: "user-001",
+          opportunity_id: id,
+          type: track,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        router.push(`/${track === "grant" ? "grants" : "scholarships"}/applications/${data.id}`);
+      } else {
+        const app = `app-${Date.now()}`;
+        router.push(`/${track === "grant" ? "grants" : "scholarships"}/applications/${app}`);
+      }
+    } catch {
+      const app = `app-${Date.now()}`;
+      router.push(`/${track === "grant" ? "grants" : "scholarships"}/applications/${app}`);
+    } finally {
+      setCreating(null);
+    }
+  };
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+      {creating && (
+        <div className="fixed inset-0 bg-white/80 z-50 flex items-center justify-center">
+          <div className="flex items-center gap-3 bg-white px-6 py-4 rounded-xl shadow-lg border border-slate-200">
+            <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm font-medium text-slate-700">Creating application...</span>
+          </div>
+        </div>
+      )}
+
       <GreetingHeader user={user} />
-      <GlobalSearch />
+      <GlobalSearch onSearch={setSearchQuery} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left column */}
         <div className="space-y-6">
-          <MatchingOpportunities />
+          <MatchingOpportunities
+            searchQuery={searchQuery}
+            onStartApplication={handleStartApplication}
+          />
           <ReadinessAssessmentWidget assessments={mockReadiness} />
         </div>
 
