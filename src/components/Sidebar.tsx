@@ -40,6 +40,7 @@ const navItems: NavItem[] = [
     badge: "3 new",
     children: [
       { label: "All Grants", href: "/grants" },
+      { label: "Idea Co-Creation", href: "/grants/brainstorm" },
       { label: "Alerts", href: "/grants/alerts" },
       { label: "Saved", href: "/grants/saved" },
       { label: "My Private", href: "/grants/my-private" },
@@ -51,6 +52,7 @@ const navItems: NavItem[] = [
     icon: <GraduationCap size={20} />,
     children: [
       { label: "All Scholarships", href: "/scholarships" },
+      { label: "Idea Studio", href: "/scholarships/brainstorm" },
       { label: "Alerts", href: "/scholarships/alerts" },
       { label: "Saved", href: "/scholarships/saved" },
       { label: "My Private", href: "/scholarships/my-private" },
@@ -63,6 +65,7 @@ const navItems: NavItem[] = [
     children: [
       { label: "Literature Discovery", href: "/research/literature" },
       { label: "Citation Manager", href: "/research/citations" },
+      { label: "Research Studio", href: "/research/studio" },
       { label: "My Research Projects", href: "/research/projects" },
     ],
   },

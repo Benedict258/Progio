@@ -5,6 +5,7 @@ from app.models.research_project import ResearchProject
 from app.models.project import Project
 from app.models.readiness_assessment import ReadinessAssessment
 from app.models.alert_preference import AlertPreference
+from app.models.private_opportunity import PrivateOpportunity
 
 __all__ = [
     "User",
@@ -14,4 +15,5 @@ __all__ = [
     "Project",
     "ReadinessAssessment",
     "AlertPreference",
+    "PrivateOpportunity",
 ]

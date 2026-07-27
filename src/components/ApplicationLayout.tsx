@@ -214,10 +214,11 @@ export function ApplicationLayout({
               content={sectionContent[activeSection] || ""}
               onUpdate={(html) => handleContentUpdate(activeSection, html)}
               placeholder={`Write your ${sections.find((s) => s.key === activeSection)?.label || "section"} here...`}
+              applicationId={applicationId}
             />
 
             <p className="mt-3 text-xs text-slate-400">
-              Tip: Use the AI Co-Writer to generate a first draft, then refine it with your own voice.
+              Tip: Use the AI Co-Writer to generate a first draft. Select any text to access AI refinement tools for tone, length, and content adjustments.
             </p>
           </div>
         </div>
