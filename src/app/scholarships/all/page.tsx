@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { mockScholarshipMatches } from "@/lib/mock-data";
 import {
@@ -10,14 +10,22 @@ import {
   ArrowRight,
   Loader2,
   Search,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react";
+import { toggleScholarshipSaved, isScholarshipSaved, getSavedScholarships } from "@/lib/storage";
+import { GatedContent } from "@/components/GatedContent";
 
 function OpportunityCard({
   opportunity,
   onStartApplication,
+  saved,
+  onToggleSave,
 }: {
   opportunity: (typeof mockScholarshipMatches)[number];
   onStartApplication: (id: string) => void;
+  saved: boolean;
+  onToggleSave: () => void;
 }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition-shadow">
@@ -28,9 +36,18 @@ function OpportunityCard({
           </h3>
           <p className="text-sm text-slate-500 mt-0.5">{opportunity.provider}</p>
         </div>
-        <div className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm font-medium ml-4 flex-shrink-0">
-          <Sparkles size={14} />
-          {opportunity.matchScore}% match
+        <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+          <div className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm font-medium">
+            <Sparkles size={14} />
+            {opportunity.matchScore}% match
+          </div>
+          <button
+            onClick={onToggleSave}
+            className={`p-2 rounded-lg transition-colors ${saved ? "bg-indigo-100 text-indigo-600" : "bg-slate-100 text-slate-400 hover:text-indigo-600"}`}
+            title={saved ? "Remove from saved" : "Save opportunity"}
+          >
+            {saved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+          </button>
         </div>
       </div>
 
@@ -86,6 +103,15 @@ export default function AllScholarshipsPage() {
   const router = useRouter();
   const [creating, setCreating] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+
+  const refreshSaved = useCallback(() => {
+    setSavedIds(new Set(getSavedScholarships().map((s) => s.id)));
+  }, []);
+
+  useEffect(() => {
+    refreshSaved();
+  }, [refreshSaved]);
 
   const filteredScholarships = searchQuery
     ? mockScholarshipMatches.filter(
@@ -124,6 +150,18 @@ export default function AllScholarshipsPage() {
     }
   };
 
+  const handleToggleSave = (opp: (typeof mockScholarshipMatches)[number]) => {
+    toggleScholarshipSaved({
+      id: opp.id,
+      title: opp.title,
+      provider: opp.provider,
+      deadline: opp.deadline,
+      amount: opp.amount,
+      track: opp.track,
+    });
+    refreshSaved();
+  };
+
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -146,23 +184,88 @@ export default function AllScholarshipsPage() {
         </div>
       </div>
 
+      <GatedContent feature="advanced_filters">
+        <div className="mb-6 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Search size={16} className="text-indigo-600" />
+            <h3 className="text-sm font-semibold text-slate-900">Advanced Filters</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Field of Study</label>
+              <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All fields</option>
+                <option>Computer Science</option>
+                <option>Biology</option>
+                <option>Engineering</option>
+                <option>Physics</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Region</label>
+              <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All regions</option>
+                <option>North America</option>
+                <option>Europe</option>
+                <option>Asia</option>
+                <option>Africa</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Deadline Range</label>
+              <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">Any deadline</option>
+                <option>Within 7 days</option>
+                <option>Within 30 days</option>
+                <option>Within 90 days</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </GatedContent>
+
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {filteredScholarships.length === 0 ? (
           <EmptyState />
         ) : (
-          filteredScholarships.map((opp) => (
-            <div key={opp.id} className="relative">
-              {creating === opp.id && (
-                <div className="absolute inset-0 bg-white/80 rounded-xl z-10 flex items-center justify-center">
-                  <Loader2 size={24} className="animate-spin text-indigo-600" />
-                </div>
-              )}
-              <OpportunityCard
-                opportunity={opp}
-                onStartApplication={handleStartApplication}
-              />
-            </div>
-          ))
+          <>
+            {filteredScholarships.slice(0, 3).map((opp) => (
+              <div key={opp.id} className="relative">
+                {creating === opp.id && (
+                  <div className="absolute inset-0 bg-white/80 rounded-xl z-10 flex items-center justify-center">
+                    <Loader2 size={24} className="animate-spin text-indigo-600" />
+                  </div>
+                )}
+                <OpportunityCard
+                  opportunity={opp}
+                  onStartApplication={handleStartApplication}
+                  saved={savedIds.has(opp.id)}
+                  onToggleSave={() => handleToggleSave(opp)}
+                />
+              </div>
+            ))}
+            {filteredScholarships.length > 3 && (
+              <GatedContent feature="full_scholarships">
+                <>
+                  {filteredScholarships.slice(3).map((opp) => (
+                    <div key={opp.id} className="relative">
+                      {creating === opp.id && (
+                        <div className="absolute inset-0 bg-white/80 rounded-xl z-10 flex items-center justify-center">
+                          <Loader2 size={24} className="animate-spin text-indigo-600" />
+                        </div>
+                      )}
+                      <OpportunityCard
+                        opportunity={opp}
+                        onStartApplication={handleStartApplication}
+                        saved={savedIds.has(opp.id)}
+                        onToggleSave={() => handleToggleSave(opp)}
+                      />
+                    </div>
+                  ))}
+                </>
+              </GatedContent>
+            )}
+          </>
         )}
       </div>
     </div>

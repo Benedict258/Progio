@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -15,8 +15,10 @@ import {
   Calendar,
   ArrowRight,
   BookOpen,
+  Printer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GatedContent } from "@/components/GatedContent";
 import {
   mockUser,
   mockGrantMatches,
@@ -27,6 +29,8 @@ import {
   type MatchOpportunity,
   type Deadline,
 } from "@/lib/mock-data";
+
+const API_BASE = "http://localhost:8000";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -39,6 +43,14 @@ function getDaysLabel(days: number): string {
   if (days === 0) return "Today";
   if (days === 1) return "Tomorrow";
   return `${days} days`;
+}
+
+function daysUntil(dateStr: string): number {
+  const target = new Date(dateStr);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
 }
 
 function matchScoreColor(score: number): string {
@@ -84,6 +96,14 @@ function statusLabel(status: string) {
   return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center py-8">
+      <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
 function EmptyState({
   icon,
   title,
@@ -113,15 +133,22 @@ function EmptyState({
 
 // ─── Widgets ────────────────────────────────────────────────────────────
 
-function GreetingHeader({ user }: { user: typeof mockUser }) {
-  const completed = user.onboardingSteps.filter((s) => s.completed).length;
-  const total = user.onboardingSteps.length;
+function GreetingHeader({
+  user,
+  onboardingSteps,
+}: {
+  user: { name: string; profile_completion_pct?: number };
+  onboardingSteps?: { label: string; completed: boolean }[];
+}) {
+  const steps = onboardingSteps ?? mockUser.onboardingSteps;
+  const completed = steps.filter((s) => s.completed).length;
+  const total = steps.length;
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">
-          {getGreeting()}, {user.name}
+          {getGreeting()}, {user.name.split(" ").pop() || user.name}
         </h1>
         <p className="text-slate-500 mt-1">
           Here&apos;s what&apos;s happening across your opportunities today.
@@ -236,33 +263,52 @@ function MatchCard({
 }
 
 function MatchingOpportunities({
+  grants,
+  scholarships,
   searchQuery,
+  loading,
   onStartApplication,
 }: {
+  grants: MatchOpportunity[];
+  scholarships: MatchOpportunity[];
   searchQuery: string;
+  loading: boolean;
   onStartApplication: (id: string, track: "grant" | "scholarship") => void;
 }) {
   const filteredGrants = useMemo(() => {
-    if (!searchQuery) return mockGrantMatches;
+    if (!searchQuery) return grants;
     const q = searchQuery.toLowerCase();
-    return mockGrantMatches.filter(
+    return grants.filter(
       (m) =>
         m.title.toLowerCase().includes(q) ||
         m.provider.toLowerCase().includes(q) ||
         m.matchReasons.some((r) => r.toLowerCase().includes(q))
     );
-  }, [searchQuery]);
+  }, [searchQuery, grants]);
 
   const filteredScholarships = useMemo(() => {
-    if (!searchQuery) return mockScholarshipMatches;
+    if (!searchQuery) return scholarships;
     const q = searchQuery.toLowerCase();
-    return mockScholarshipMatches.filter(
+    return scholarships.filter(
       (m) =>
         m.title.toLowerCase().includes(q) ||
         m.provider.toLowerCase().includes(q) ||
         m.matchReasons.some((r) => r.toLowerCase().includes(q))
     );
-  }, [searchQuery]);
+  }, [searchQuery, scholarships]);
+
+  const freeGrants = filteredGrants.slice(0, 3);
+  const gatedGrants = filteredGrants.slice(3);
+  const freeScholarships = filteredScholarships.slice(0, 3);
+  const gatedScholarships = filteredScholarships.slice(3);
+
+  if (loading) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -279,9 +325,20 @@ function MatchingOpportunities({
               description="Try adjusting your filters or check back later."
             />
           ) : (
-            filteredGrants.map((m) => (
-              <MatchCard key={m.id} match={m} onStartApplication={onStartApplication} />
-            ))
+            <>
+              {freeGrants.map((m) => (
+                <MatchCard key={m.id} match={m} onStartApplication={onStartApplication} />
+              ))}
+              {gatedGrants.length > 0 && (
+                <GatedContent feature="full_opportunities">
+                  <div className="space-y-3">
+                    {gatedGrants.map((m) => (
+                      <MatchCard key={m.id} match={m} onStartApplication={onStartApplication} />
+                    ))}
+                  </div>
+                </GatedContent>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -299,9 +356,20 @@ function MatchingOpportunities({
               description="Complete your profile to improve matches."
             />
           ) : (
-            filteredScholarships.map((m) => (
-              <MatchCard key={m.id} match={m} onStartApplication={onStartApplication} />
-            ))
+            <>
+              {freeScholarships.map((m) => (
+                <MatchCard key={m.id} match={m} onStartApplication={onStartApplication} />
+              ))}
+              {gatedScholarships.length > 0 && (
+                <GatedContent feature="full_opportunities">
+                  <div className="space-y-3">
+                    {gatedScholarships.map((m) => (
+                      <MatchCard key={m.id} match={m} onStartApplication={onStartApplication} />
+                    ))}
+                  </div>
+                </GatedContent>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -337,46 +405,54 @@ function ClosingSoonWidget({ deadlines }: { deadlines: Deadline[] }) {
         <h3 className="text-sm font-semibold text-slate-900">Closing Soon</h3>
       </div>
       <div className="space-y-3">
-        {sorted.map((d) => (
-          <Link
-            key={d.id}
-            href={getHref(d)}
-            className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
-          >
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">{d.title}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{d.provider}</p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <span
-                className={cn(
-                  "text-[11px] font-medium px-2 py-0.5 rounded-full",
-                  trackBadge(d.track)
-                )}
-              >
-                {d.track}
-              </span>
-              <span
-                className={cn(
-                  "text-xs font-semibold",
-                  d.daysRemaining <= 7 ? "text-red-600" : "text-slate-600"
-                )}
-              >
-                {getDaysLabel(d.daysRemaining)}
-              </span>
-            </div>
-          </Link>
-        ))}
+        {sorted.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-4">No upcoming deadlines.</p>
+        ) : (
+          sorted.map((d) => (
+            <Link
+              key={d.id}
+              href={getHref(d)}
+              className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-900 truncate">{d.title}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{d.provider}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span
+                  className={cn(
+                    "text-[11px] font-medium px-2 py-0.5 rounded-full",
+                    trackBadge(d.track)
+                  )}
+                >
+                  {d.track}
+                </span>
+                <span
+                  className={cn(
+                    "text-xs font-semibold",
+                    d.daysRemaining <= 7 ? "text-red-600" : "text-slate-600"
+                  )}
+                >
+                  {getDaysLabel(d.daysRemaining)}
+                </span>
+              </div>
+            </Link>
+          ))
+        )}
       </div>
     </div>
   );
 }
 
-function ProfileCompletionWidget({ user }: { user: typeof mockUser }) {
+function ProfileCompletionWidget({
+  profilePct,
+}: {
+  profilePct: number;
+}) {
   const [showModal, setShowModal] = useState(false);
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (user.profileCompletion / 100) * circumference;
+  const offset = circumference - (profilePct / 100) * circumference;
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
@@ -410,7 +486,7 @@ function ProfileCompletionWidget({ user }: { user: typeof mockUser }) {
             />
           </svg>
           <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-slate-900">
-            {user.profileCompletion}%
+            {Math.round(profilePct)}%
           </span>
         </div>
 
@@ -419,13 +495,15 @@ function ProfileCompletionWidget({ user }: { user: typeof mockUser }) {
             Complete your profile to improve match accuracy.
           </p>
           <div className="flex items-center gap-2 mt-3">
-            <Link
-              href="/profile"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              <Sparkles size={14} />
-              AI Fill
-            </Link>
+            <GatedContent feature="ai_fill">
+              <Link
+                href="/profile"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <Sparkles size={14} />
+                AI Fill
+              </Link>
+            </GatedContent>
             <Link
               href="/profile"
               className="text-xs font-medium text-slate-600 hover:text-slate-900"
@@ -468,7 +546,25 @@ function ProfileCompletionWidget({ user }: { user: typeof mockUser }) {
   );
 }
 
-function ApplicationsInProgressWidget({ applications }: { applications: typeof mockApplications }) {
+function ApplicationsInProgressWidget({
+  applications,
+  loading,
+}: {
+  applications: typeof mockApplications;
+  loading: boolean;
+}) {
+  if (loading) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <FileText size={18} className="text-indigo-600" />
+          <h3 className="text-sm font-semibold text-slate-900">Applications In Progress</h3>
+        </div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   if (applications.length === 0) {
     return (
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
@@ -544,9 +640,23 @@ function ApplicationsInProgressWidget({ applications }: { applications: typeof m
 
 function ReadinessAssessmentWidget({
   assessments,
+  loading,
 }: {
   assessments: typeof mockReadiness;
+  loading: boolean;
 }) {
+  if (loading) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <CheckCircle2 size={18} className="text-indigo-600" />
+          <h3 className="text-sm font-semibold text-slate-900">Readiness Assessments</h3>
+        </div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
       <div className="flex items-center gap-2 mb-4">
@@ -619,52 +729,56 @@ function DeadlinesDueSoonList({ deadlines }: { deadlines: Deadline[] }) {
         <h3 className="text-sm font-semibold text-slate-900">Deadlines Due Soon</h3>
       </div>
       <div className="space-y-2">
-        {sorted.map((d) => (
-          <Link
-            key={d.id}
-            href={getHref(d)}
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
-          >
-            <span
-              className={cn(
-                "shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold",
-                d.daysRemaining <= 7
-                  ? "bg-red-100 text-red-700"
-                  : "bg-slate-100 text-slate-600"
-              )}
+        {sorted.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-4">No upcoming deadlines.</p>
+        ) : (
+          sorted.map((d) => (
+            <Link
+              key={d.id}
+              href={getHref(d)}
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              {d.daysRemaining}
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">{d.title}</p>
-              <p className="text-xs text-slate-500">
-                {new Date(d.deadline).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
               <span
                 className={cn(
-                  "text-[11px] font-medium px-2 py-0.5 rounded-full",
-                  trackBadge(d.track)
+                  "shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold",
+                  d.daysRemaining <= 7
+                    ? "bg-red-100 text-red-700"
+                    : "bg-slate-100 text-slate-600"
                 )}
               >
-                {d.track}
+                {d.daysRemaining}
               </span>
-              <span
-                className={cn(
-                  "text-[11px] font-medium px-2 py-0.5 rounded-full",
-                  statusColor(d.applicationStatus)
-                )}
-              >
-                {statusLabel(d.applicationStatus)}
-              </span>
-            </div>
-          </Link>
-        ))}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-900 truncate">{d.title}</p>
+                <p className="text-xs text-slate-500">
+                  {new Date(d.deadline).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span
+                  className={cn(
+                    "text-[11px] font-medium px-2 py-0.5 rounded-full",
+                    trackBadge(d.track)
+                  )}
+                >
+                  {d.track}
+                </span>
+                <span
+                  className={cn(
+                    "text-[11px] font-medium px-2 py-0.5 rounded-full",
+                    statusColor(d.applicationStatus)
+                  )}
+                >
+                  {statusLabel(d.applicationStatus)}
+                </span>
+              </div>
+            </Link>
+          ))
+        )}
       </div>
     </div>
   );
@@ -674,14 +788,180 @@ function DeadlinesDueSoonList({ deadlines }: { deadlines: Deadline[] }) {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user] = useState(mockUser);
   const [searchQuery, setSearchQuery] = useState("");
   const [creating, setCreating] = useState<string | null>(null);
+
+  const [user, setUser] = useState(mockUser);
+  const [profilePct, setProfilePct] = useState(mockUser.profileCompletion);
+  const [grants, setGrants] = useState<MatchOpportunity[]>(mockGrantMatches);
+  const [scholarships, setScholarships] = useState<MatchOpportunity[]>(mockScholarshipMatches);
+  const [deadlines, setDeadlines] = useState<Deadline[]>(mockDeadlines);
+  const [applications, setApplications] = useState<typeof mockApplications>(mockApplications);
+  const [readiness, setReadiness] = useState<typeof mockReadiness>(mockReadiness);
+
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingMatches, setLoadingMatches] = useState(true);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadingReadiness, setLoadingReadiness] = useState(true);
+
+  // 1. Fetch user profile
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch(`${API_BASE}/api/profile?user_id=user-001`);
+        if (!res.ok) throw new Error("Failed to fetch profile");
+        const data = await res.json();
+        setUser((prev) => ({
+          ...prev,
+          name: data.name || prev.name,
+          fullName: data.name || prev.fullName,
+          email: data.email || prev.email,
+          institution: data.institution || prev.institution,
+          field: data.field_of_study || prev.field,
+        }));
+        setProfilePct(data.profile_completion_pct ?? mockUser.profileCompletion);
+      } catch {
+        // fallback to mockUser
+      } finally {
+        setLoadingProfile(false);
+      }
+    }
+    fetchProfile();
+  }, []);
+
+  // 2. Fetch enriched matches for grants and scholarships
+  useEffect(() => {
+    async function fetchMatches() {
+      try {
+        const [grantRes, scholarshipRes] = await Promise.all([
+          fetch(`${API_BASE}/api/opportunities/matches-enriched?user_id=user-001&type=grant`),
+          fetch(`${API_BASE}/api/opportunities/matches-enriched?user_id=user-001&type=scholarship`),
+        ]);
+
+        if (grantRes.ok) {
+          const grantData = await grantRes.json();
+          const mappedGrants: MatchOpportunity[] = (grantData.matches || []).map(
+            (m: { opportunity_id: string; title: string; provider: string; score: number; match_reasons: string[]; award_range?: string; deadline?: string }) => ({
+              id: m.opportunity_id,
+              title: m.title,
+              provider: m.provider,
+              matchScore: Math.round(m.score),
+              deadline: m.deadline || "2027-01-01",
+              matchReasons: m.match_reasons,
+              track: "grant" as const,
+              amount: m.award_range || undefined,
+            })
+          );
+          setGrants(mappedGrants);
+        }
+
+        if (scholarshipRes.ok) {
+          const scholarshipData = await scholarshipRes.json();
+          const mappedScholarships: MatchOpportunity[] = (scholarshipData.matches || []).map(
+            (m: { opportunity_id: string; title: string; provider: string; score: number; match_reasons: string[]; award_range?: string; deadline?: string }) => ({
+              id: m.opportunity_id,
+              title: m.title,
+              provider: m.provider,
+              matchScore: Math.round(m.score),
+              deadline: m.deadline || "2027-01-01",
+              matchReasons: m.match_reasons,
+              track: "scholarship" as const,
+              amount: m.award_range || undefined,
+            })
+          );
+          setScholarships(mappedScholarships);
+        }
+
+        // Derive deadlines from both grant and scholarship matches
+        const allMatches = [
+          ...(grantRes.ok ? (await grantRes.json()).matches || [] : []),
+          ...(scholarshipRes.ok ? (await scholarshipRes.json()).matches || [] : []),
+        ];
+        const derivedDeadlines: Deadline[] = allMatches
+          .filter((m: { deadline?: string }) => m.deadline)
+          .map((m: { opportunity_id: string; title: string; provider: string; deadline: string; type?: string }) => ({
+            id: m.opportunity_id,
+            title: m.title,
+            provider: m.provider,
+            track: (m.type || (m.opportunity_id.startsWith("opp-g") ? "grant" : "scholarship")) as "grant" | "scholarship",
+            deadline: m.deadline,
+            daysRemaining: daysUntil(m.deadline),
+            applicationStatus: "not_started" as const,
+          }))
+          .sort((a: Deadline, b: Deadline) => a.daysRemaining - b.daysRemaining);
+        setDeadlines(derivedDeadlines);
+      } catch {
+        // fallback to mock data
+      } finally {
+        setLoadingMatches(false);
+      }
+    }
+    fetchMatches();
+  }, []);
+
+  // 3. Fetch projects (applications in progress)
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const res = await fetch(`${API_BASE}/api/projects?user_id=user-001`);
+        if (!res.ok) throw new Error("Failed to fetch projects");
+        const data = await res.json();
+        const mapped = (data || []).map((p: { id: string; status: string; source_application_id?: string; progress_pct?: number; updated_at?: string }) => ({
+          id: p.id,
+          opportunityTitle: p.source_application_id || "Untitled Project",
+          track: "grant" as const,
+          status: (p.status === "completed" ? "submitted" : "drafting") as "drafting",
+          lastEdited: p.updated_at ? new Date(p.updated_at).toLocaleDateString() : "Never",
+          progress: p.progress_pct ?? 0,
+        }));
+        setApplications(mapped);
+      } catch {
+        // fallback to mockApplications
+      } finally {
+        setLoadingProjects(false);
+      }
+    }
+    fetchProjects();
+  }, []);
+
+  // 4. Fetch readiness assessment results
+  useEffect(() => {
+    async function fetchReadiness() {
+      try {
+        const res = await fetch(`${API_BASE}/api/readiness/results/user-001`);
+        if (!res.ok) throw new Error("Failed to fetch readiness");
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const trackLabels: Record<string, string> = {
+            grant: "Grant Readiness",
+            scholarship: "Scholarship Readiness",
+            research: "Research Readiness",
+          };
+          const completedTracks = new Map(
+            data.map((r: { track: string; score: number }) => [r.track, r.score])
+          );
+          const mapped: typeof mockReadiness = ["grant", "scholarship", "research"].map((track) => ({
+            id: `r-${track}`,
+            type: track as "grant" | "scholarship" | "research",
+            label: trackLabels[track],
+            completed: completedTracks.has(track),
+            score: completedTracks.get(track),
+          }));
+          setReadiness(mapped);
+        }
+      } catch {
+        // fallback to mockReadiness
+      } finally {
+        setLoadingReadiness(false);
+      }
+    }
+    fetchReadiness();
+  }, []);
 
   const handleStartApplication = async (id: string, track: "grant" | "scholarship") => {
     setCreating(id);
     try {
-      const res = await fetch("/api/applications", {
+      const res = await fetch(`${API_BASE}/api/applications`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -706,6 +986,10 @@ export default function DashboardPage() {
     }
   };
 
+  const handleExportPdf = () => {
+    window.print();
+  };
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       {creating && (
@@ -717,25 +1001,82 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <GreetingHeader user={user} />
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <GreetingHeader user={user} onboardingSteps={mockUser.onboardingSteps} />
+        </div>
+        <button
+          onClick={handleExportPdf}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors shadow-sm print:hidden mt-2"
+        >
+          <Printer size={16} />
+          Export PDF
+        </button>
+      </div>
       <GlobalSearch onSearch={setSearchQuery} />
+
+      {/* Advanced Search Filters - Gated */}
+      <GatedContent feature="advanced_search">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Search size={16} className="text-indigo-600" />
+            <h3 className="text-sm font-semibold text-slate-900">Advanced Filters</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Field of Study</label>
+              <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All fields</option>
+                <option>Computer Science</option>
+                <option>Biology</option>
+                <option>Engineering</option>
+                <option>Physics</option>
+                <option>Social Sciences</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Region</label>
+              <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All regions</option>
+                <option>North America</option>
+                <option>Europe</option>
+                <option>Asia</option>
+                <option>Africa</option>
+                <option>Global</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Deadline Range</label>
+              <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">Any deadline</option>
+                <option>Within 7 days</option>
+                <option>Within 30 days</option>
+                <option>Within 90 days</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </GatedContent>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left column */}
         <div className="space-y-6">
           <MatchingOpportunities
+            grants={grants}
+            scholarships={scholarships}
             searchQuery={searchQuery}
+            loading={loadingMatches}
             onStartApplication={handleStartApplication}
           />
-          <ReadinessAssessmentWidget assessments={mockReadiness} />
+          <ReadinessAssessmentWidget assessments={readiness} loading={loadingReadiness} />
         </div>
 
         {/* Right column */}
         <div className="space-y-6">
-          <ClosingSoonWidget deadlines={mockDeadlines} />
-          <ProfileCompletionWidget user={user} />
-          <ApplicationsInProgressWidget applications={mockApplications} />
-          <DeadlinesDueSoonList deadlines={mockDeadlines} />
+          <ClosingSoonWidget deadlines={deadlines} />
+          <ProfileCompletionWidget profilePct={profilePct} />
+          <ApplicationsInProgressWidget applications={applications} loading={loadingProjects} />
+          <DeadlinesDueSoonList deadlines={deadlines} />
         </div>
       </div>
     </div>

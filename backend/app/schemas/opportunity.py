@@ -11,6 +11,21 @@ class MatchResponse(BaseModel):
     matches: list[MatchResult]
 
 
+class EnrichedMatch(BaseModel):
+    opportunity_id: str
+    title: str
+    provider: str
+    score: float
+    match_reasons: list[str]
+    award_range: str | None = None
+    deadline: str | None = None
+    type: str | None = None
+
+
+class EnrichedMatchResponse(BaseModel):
+    matches: list[EnrichedMatch]
+
+
 class OpportunityResponse(BaseModel):
     id: str
     type: str

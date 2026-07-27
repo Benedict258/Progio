@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { ArrowLeft, Save, Send, CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { ArrowLeft, Save, Send, CheckCircle2, Clock, Loader2, Trophy } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SectionSidebar, Section } from "./SectionSidebar";
 import { ProseMirrorEditor } from "./Editor";
@@ -30,12 +31,29 @@ export function ApplicationLayout({
   sections,
   backHref,
 }: ApplicationLayoutProps) {
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState(sections[0]?.key || "");
   const [sectionContent, setSectionContent] = useState<Record<string, string>>({});
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState("draft");
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [markingWon, setMarkingWon] = useState(false);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/applications/${applicationId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status) setStatus(data.status);
+        }
+      } catch {
+        // keep default
+      }
+    };
+    fetchStatus();
+  }, [applicationId]);
 
   const handleContentUpdate = useCallback(
     (key: string, html: string) => {
@@ -66,12 +84,12 @@ export function ApplicationLayout({
     if (!confirm("Submit this application? You won't be able to edit it after submission.")) return;
     setSubmitting(true);
     try {
-      await fetch(`/api/applications/${applicationId}`, {
+      await fetch(`http://localhost:8000/api/applications/${applicationId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sections: sectionContent }),
       });
-      const res = await fetch(`/api/applications/${applicationId}/status`, {
+      const res = await fetch(`http://localhost:8000/api/applications/${applicationId}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "submitted" }),
@@ -84,7 +102,27 @@ export function ApplicationLayout({
     }
   };
 
+  const handleMarkAsWon = async () => {
+    if (!confirm("Mark this application as won? This will create a new project and cannot be undone.")) return;
+    setMarkingWon(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/applications/${applicationId}/mark-won`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        setStatus("won");
+        router.push("/projects");
+      }
+    } catch (err) {
+      console.error("Mark as won failed:", err);
+    } finally {
+      setMarkingWon(false);
+    }
+  };
+
   const statusInfo = statusConfig[status] || statusConfig.draft;
+  const canMarkAsWon = status === "draft" || status === "submitted";
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -143,6 +181,17 @@ export function ApplicationLayout({
                 Submit
               </button>
             )}
+
+            {canMarkAsWon && (
+              <button
+                onClick={handleMarkAsWon}
+                disabled={markingWon}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+              >
+                {markingWon ? <Loader2 size={14} className="animate-spin" /> : <Trophy size={14} />}
+                Mark as Won
+              </button>
+            )}
           </div>
         </header>
 
@@ -154,6 +203,7 @@ export function ApplicationLayout({
                 {sections.find((s) => s.key === activeSection)?.label}
               </h2>
               <AICoWriterButton
+                applicationId={applicationId}
                 trackType={trackType}
                 sectionKey={activeSection}
                 onStream={(content) => handleContentUpdate(activeSection, content)}

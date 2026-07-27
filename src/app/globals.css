@@ -25,3 +25,12 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
+
+@media print {
+  aside, nav, .print\:hidden, button:not(.print-show) {
+    display: none !important;
+  }
+  main {
+    overflow: visible !important;
+  }
+}

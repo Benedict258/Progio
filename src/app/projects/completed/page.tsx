@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   FolderCheck,
   Calendar,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,57 +33,11 @@ interface Project {
   completed_at?: string;
 }
 
-const mockCompletedProjects: Project[] = [
-  {
-    id: "proj-comp-001",
-    user_id: "user-001",
-    source_application_id: "app-comp-001",
-    status: "completed",
-    title: "Ford Foundation - Racial Justice Research",
-    source_opportunity: "Ford Foundation",
-    milestones: [
-      {
-        id: "ms-c001",
-        title: "Project Kickoff",
-        due_date: "2025-06-01T00:00:00Z",
-        status: "completed",
-        description: "Initial project setup, team introduction, and scope confirmation",
-      },
-      {
-        id: "ms-c002",
-        title: "First Progress Report",
-        due_date: "2025-07-31T00:00:00Z",
-        status: "completed",
-        description: "Submit first progress report covering initial milestones achieved",
-      },
-      {
-        id: "ms-c003",
-        title: "Mid-term Review",
-        due_date: "2025-11-30T00:00:00Z",
-        status: "completed",
-        description: "Comprehensive mid-term review of project progress and deliverables",
-      },
-      {
-        id: "ms-c004",
-        title: "Final Report Submission",
-        due_date: "2026-05-31T00:00:00Z",
-        status: "completed",
-        description: "Submit final project report with all deliverables and outcomes",
-      },
-      {
-        id: "ms-c005",
-        title: "Project Closure",
-        due_date: "2026-06-30T00:00:00Z",
-        status: "completed",
-        description: "Final project closure, knowledge transfer, and documentation",
-      },
-    ],
-    created_at: "2025-05-25T00:00:00Z",
-    updated_at: "2026-06-28T00:00:00Z",
-    progress_pct: 100,
-    completed_at: "2026-06-28T00:00:00Z",
-  },
-];
+function computeProgress(milestones: Milestone[]): number {
+  if (!milestones || milestones.length === 0) return 0;
+  const completed = milestones.filter((m) => m.status === "completed").length;
+  return Math.round((completed / milestones.length) * 100);
+}
 
 function milestoneStatusIcon(status: string) {
   switch (status) {
@@ -185,7 +140,42 @@ function CompletedProjectCard({ project }: { project: Project }) {
 }
 
 export default function CompletedProjectsPage() {
-  const projects = mockCompletedProjects;
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/projects?user_id=user-001");
+        if (res.ok) {
+          const data = await res.json();
+          const completed = data
+            .filter((p: Project) => p.status === "completed")
+            .map((p: Project) => ({
+              ...p,
+              progress_pct: p.progress_pct ?? computeProgress(p.milestones),
+            }));
+          setProjects(completed);
+        }
+      } catch {
+        // keep empty
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-4 md:p-8 max-w-7xl mx-auto">
+        <div className="flex items-center justify-center py-12 text-slate-500 gap-2">
+          <Loader2 size={18} className="animate-spin" />
+          Loading projects...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">

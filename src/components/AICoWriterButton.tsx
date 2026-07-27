@@ -4,12 +4,14 @@ import { useState } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 
 interface AICoWriterButtonProps {
+  applicationId: string;
   trackType: string;
   sectionKey: string;
   onStream: (content: string) => void;
 }
 
 export function AICoWriterButton({
+  applicationId,
   trackType,
   sectionKey,
   onStream,
@@ -19,7 +21,7 @@ export function AICoWriterButton({
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/ai/generate-section", {
+      const res = await fetch(`http://localhost:8000/api/applications/${applicationId}/generate-section`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ section_type: sectionKey, track_type: trackType }),

@@ -16,6 +16,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { GatedContent } from "@/components/GatedContent";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -433,49 +434,51 @@ export default function ProfilePage() {
         </div>
 
         <div className="space-y-6">
-          <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles size={18} className="text-indigo-600" />
-              <h3 className="font-semibold text-slate-900">
-                AI Profile Fill
-              </h3>
+          <GatedContent feature="ai_fill_cv">
+            <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles size={18} className="text-indigo-600" />
+                <h3 className="font-semibold text-slate-900">
+                  AI Profile Fill
+                </h3>
+              </div>
+              <p className="text-sm text-slate-500 mb-4">
+                Upload your CV, transcript, or academic document and let AI
+                extract your profile information.
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.txt,.md,.csv,.doc,.docx"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleAiFill(file);
+                  e.target.value = "";
+                }}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={aiLoading}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {aiLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Extracting...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={16} />
+                    Upload CV / Transcript
+                  </>
+                )}
+              </button>
+              <p className="text-xs text-slate-400 mt-2 text-center">
+                PDF, TXT, MD, CSV, DOC, DOCX (max 10MB)
+              </p>
             </div>
-            <p className="text-sm text-slate-500 mb-4">
-              Upload your CV, transcript, or academic document and let AI
-              extract your profile information.
-            </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.txt,.md,.csv,.doc,.docx"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleAiFill(file);
-                e.target.value = "";
-              }}
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={aiLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {aiLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Extracting...
-                </>
-              ) : (
-                <>
-                  <Upload size={16} />
-                  Upload CV / Transcript
-                </>
-              )}
-            </button>
-            <p className="text-xs text-slate-400 mt-2 text-center">
-              PDF, TXT, MD, CSV, DOC, DOCX (max 10MB)
-            </p>
-          </div>
+          </GatedContent>
 
           <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
             <h3 className="font-semibold text-slate-900 mb-3">

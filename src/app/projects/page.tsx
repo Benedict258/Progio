@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
   FolderOpen,
@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,118 +42,15 @@ interface Project {
   source_opportunity?: string;
 }
 
-const mockProjects: Project[] = [
-  {
-    id: "proj-001",
-    user_id: "user-001",
-    source_application_id: "app-001",
-    status: "active",
-    title: "NIH R01 - Computational Genomics for Global Health",
-    source_opportunity: "National Institutes of Health",
-    milestones: [
-      {
-        id: "ms-001",
-        title: "Project Kickoff",
-        due_date: "2026-07-20T00:00:00Z",
-        status: "completed",
-        description: "Initial project setup, team introduction, and scope confirmation",
-      },
-      {
-        id: "ms-002",
-        title: "First Progress Report",
-        due_date: "2026-09-15T00:00:00Z",
-        status: "in_progress",
-        description: "Submit first progress report covering initial milestones achieved",
-      },
-      {
-        id: "ms-003",
-        title: "Mid-term Review",
-        due_date: "2027-01-15T00:00:00Z",
-        status: "pending",
-        description: "Comprehensive mid-term review of project progress and deliverables",
-      },
-      {
-        id: "ms-004",
-        title: "Final Report Submission",
-        due_date: "2027-07-15T00:00:00Z",
-        status: "pending",
-        description: "Submit final project report with all deliverables and outcomes",
-      },
-      {
-        id: "ms-005",
-        title: "Project Closure",
-        due_date: "2027-08-15T00:00:00Z",
-        status: "pending",
-        description: "Final project closure, knowledge transfer, and documentation",
-      },
-    ],
-    deliverable_deadlines: [],
-    created_at: "2026-07-13T00:00:00Z",
-    updated_at: "2026-07-13T00:00:00Z",
-    progress_pct: 20,
-    next_milestone: {
-      id: "ms-002",
-      title: "First Progress Report",
-      due_date: "2026-09-15T00:00:00Z",
-      status: "in_progress",
-    },
-  },
-  {
-    id: "proj-002",
-    user_id: "user-001",
-    source_application_id: "app-002",
-    status: "active",
-    title: "Gates Foundation - Global Health Innovation",
-    source_opportunity: "Bill & Melinda Gates Foundation",
-    milestones: [
-      {
-        id: "ms-006",
-        title: "Project Kickoff",
-        due_date: "2026-08-01T00:00:00Z",
-        status: "pending",
-        description: "Initial project setup, team introduction, and scope confirmation",
-      },
-      {
-        id: "ms-007",
-        title: "First Progress Report",
-        due_date: "2026-09-28T00:00:00Z",
-        status: "pending",
-        description: "Submit first progress report covering initial milestones achieved",
-      },
-      {
-        id: "ms-008",
-        title: "Mid-term Review",
-        due_date: "2027-01-28T00:00:00Z",
-        status: "pending",
-        description: "Comprehensive mid-term review of project progress and deliverables",
-      },
-      {
-        id: "ms-009",
-        title: "Final Report Submission",
-        due_date: "2027-07-28T00:00:00Z",
-        status: "pending",
-        description: "Submit final project report with all deliverables and outcomes",
-      },
-      {
-        id: "ms-010",
-        title: "Project Closure",
-        due_date: "2027-08-27T00:00:00Z",
-        status: "pending",
-        description: "Final project closure, knowledge transfer, and documentation",
-      },
-    ],
-    deliverable_deadlines: [],
-    created_at: "2026-07-28T00:00:00Z",
-    updated_at: "2026-07-28T00:00:00Z",
-    progress_pct: 0,
-    next_milestone: {
-      id: "ms-006",
-      title: "Project Kickoff",
-      due_date: "2026-08-01T00:00:00Z",
-      status: "pending",
-    },
-  },
-];
+function computeProgress(milestones: Milestone[]): number {
+  if (!milestones || milestones.length === 0) return 0;
+  const completed = milestones.filter((m) => m.status === "completed").length;
+  return Math.round((completed / milestones.length) * 100);
+}
+
+function getNextMilestone(milestones: Milestone[]): Milestone | undefined {
+  return milestones.find((m) => m.status === "in_progress" || m.status === "pending");
+}
 
 function milestoneStatusColor(status: string) {
   const map: Record<string, string> = {
@@ -276,8 +174,42 @@ function ProjectCard({ project }: { project: Project }) {
 }
 
 export default function ProjectsPage() {
-  const projects = mockProjects;
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const activeProjects = useMemo(() => projects.filter((p) => p.status === "active"), [projects]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/projects?user_id=user-001");
+        if (res.ok) {
+          const data = await res.json();
+          const enriched = data.map((p: Project) => ({
+            ...p,
+            progress_pct: p.progress_pct ?? computeProgress(p.milestones),
+            next_milestone: p.next_milestone ?? getNextMilestone(p.milestones),
+          }));
+          setProjects(enriched);
+        }
+      } catch {
+        // keep empty
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-4 md:p-8 max-w-7xl mx-auto">
+        <div className="flex items-center justify-center py-12 text-slate-500 gap-2">
+          <Loader2 size={18} className="animate-spin" />
+          Loading projects...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { mockGrantMatches } from "@/lib/mock-data";
+import { mockGrantMatches, type MatchOpportunity } from "@/lib/mock-data";
 import {
   FileText,
   Calendar,
@@ -11,14 +11,22 @@ import {
   ArrowRight,
   Loader2,
   Search,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react";
+import { toggleGrantSaved, isGrantSaved, getSavedGrants } from "@/lib/storage";
+import { GatedContent } from "@/components/GatedContent";
 
 function OpportunityCard({
   opportunity,
   onStartApplication,
+  saved,
+  onToggleSave,
 }: {
-  opportunity: (typeof mockGrantMatches)[number];
+  opportunity: MatchOpportunity;
   onStartApplication: (id: string) => void;
+  saved: boolean;
+  onToggleSave: () => void;
 }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition-shadow">
@@ -29,9 +37,18 @@ function OpportunityCard({
           </h3>
           <p className="text-sm text-slate-500 mt-0.5">{opportunity.provider}</p>
         </div>
-        <div className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm font-medium ml-4 flex-shrink-0">
-          <Sparkles size={14} />
-          {opportunity.matchScore}% match
+        <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+          <div className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm font-medium">
+            <Sparkles size={14} />
+            {opportunity.matchScore}% match
+          </div>
+          <button
+            onClick={onToggleSave}
+            className={`p-2 rounded-lg transition-colors ${saved ? "bg-indigo-100 text-indigo-600" : "bg-slate-100 text-slate-400 hover:text-indigo-600"}`}
+            title={saved ? "Remove from saved" : "Save opportunity"}
+          >
+            {saved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+          </button>
         </div>
       </div>
 
@@ -85,24 +102,74 @@ function EmptyState() {
   );
 }
 
+function LoadingState() {
+  return (
+    <div className="col-span-full flex flex-col items-center justify-center py-16">
+      <Loader2 size={32} className="animate-spin text-indigo-600 mb-4" />
+      <p className="text-slate-500 text-sm">Loading grant opportunities…</p>
+    </div>
+  );
+}
+
 export default function AllGrantsPage() {
   const router = useRouter();
   const [creating, setCreating] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [grants, setGrants] = useState<MatchOpportunity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+
+  const refreshSaved = useCallback(() => {
+    setSavedIds(new Set(getSavedGrants().map((g) => g.id)));
+  }, []);
+
+  useEffect(() => {
+    refreshSaved();
+  }, [refreshSaved]);
+
+  useEffect(() => {
+    async function fetchGrants() {
+      try {
+        const res = await fetch(
+          "http://localhost:8000/api/opportunities/matches?user_id=user-001&type=grant"
+        );
+        if (!res.ok) throw new Error("API error");
+        const data = await res.json();
+        const mapped: MatchOpportunity[] = data.matches.map(
+          (m: Record<string, unknown>) => ({
+            id: m.opportunity_id as string,
+            title: m.title as string,
+            provider: m.provider as string,
+            matchScore: Math.round(m.score as number),
+            deadline: m.deadline as string,
+            matchReasons: m.match_reasons as string[],
+            track: "grant" as const,
+            amount: (m.award_range as string) || undefined,
+          })
+        );
+        setGrants(mapped);
+      } catch {
+        setGrants(mockGrantMatches);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchGrants();
+  }, []);
 
   const filteredGrants = searchQuery
-    ? mockGrantMatches.filter(
+    ? grants.filter(
         (opp) =>
           opp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           opp.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
           opp.matchReasons.some((r) => r.toLowerCase().includes(searchQuery.toLowerCase()))
       )
-    : mockGrantMatches;
+    : grants;
 
   const handleStartApplication = async (opportunityId: string) => {
     setCreating(opportunityId);
     try {
-      const res = await fetch("/api/applications", {
+      const res = await fetch("http://localhost:8000/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -127,6 +194,18 @@ export default function AllGrantsPage() {
     }
   };
 
+  const handleToggleSave = (opp: MatchOpportunity) => {
+    toggleGrantSaved({
+      id: opp.id,
+      title: opp.title,
+      provider: opp.provider,
+      deadline: opp.deadline,
+      amount: opp.amount,
+      track: opp.track,
+    });
+    refreshSaved();
+  };
+
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -149,23 +228,90 @@ export default function AllGrantsPage() {
         </div>
       </div>
 
+      <GatedContent feature="advanced_filters">
+        <div className="mb-6 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Search size={16} className="text-indigo-600" />
+            <h3 className="text-sm font-semibold text-slate-900">Advanced Filters</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Field of Study</label>
+              <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All fields</option>
+                <option>Computer Science</option>
+                <option>Biology</option>
+                <option>Engineering</option>
+                <option>Physics</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Region</label>
+              <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All regions</option>
+                <option>North America</option>
+                <option>Europe</option>
+                <option>Asia</option>
+                <option>Africa</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Deadline Range</label>
+              <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">Any deadline</option>
+                <option>Within 7 days</option>
+                <option>Within 30 days</option>
+                <option>Within 90 days</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </GatedContent>
+
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {filteredGrants.length === 0 ? (
+        {loading ? (
+          <LoadingState />
+        ) : filteredGrants.length === 0 ? (
           <EmptyState />
         ) : (
-          filteredGrants.map((opp) => (
-            <div key={opp.id} className="relative">
-              {creating === opp.id && (
-                <div className="absolute inset-0 bg-white/80 rounded-xl z-10 flex items-center justify-center">
-                  <Loader2 size={24} className="animate-spin text-indigo-600" />
-                </div>
-              )}
-              <OpportunityCard
-                opportunity={opp}
-                onStartApplication={handleStartApplication}
-              />
-            </div>
-          ))
+          <>
+            {filteredGrants.slice(0, 3).map((opp) => (
+              <div key={opp.id} className="relative">
+                {creating === opp.id && (
+                  <div className="absolute inset-0 bg-white/80 rounded-xl z-10 flex items-center justify-center">
+                    <Loader2 size={24} className="animate-spin text-indigo-600" />
+                  </div>
+                )}
+                <OpportunityCard
+                  opportunity={opp}
+                  onStartApplication={handleStartApplication}
+                  saved={savedIds.has(opp.id)}
+                  onToggleSave={() => handleToggleSave(opp)}
+                />
+              </div>
+            ))}
+            {filteredGrants.length > 3 && (
+              <GatedContent feature="full_grants">
+                <>
+                  {filteredGrants.slice(3).map((opp) => (
+                    <div key={opp.id} className="relative">
+                      {creating === opp.id && (
+                        <div className="absolute inset-0 bg-white/80 rounded-xl z-10 flex items-center justify-center">
+                          <Loader2 size={24} className="animate-spin text-indigo-600" />
+                        </div>
+                      )}
+                      <OpportunityCard
+                        opportunity={opp}
+                        onStartApplication={handleStartApplication}
+                        saved={savedIds.has(opp.id)}
+                        onToggleSave={() => handleToggleSave(opp)}
+                      />
+                    </div>
+                  ))}
+                </>
+              </GatedContent>
+            )}
+          </>
         )}
       </div>
     </div>
