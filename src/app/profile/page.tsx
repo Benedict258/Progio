@@ -243,10 +243,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Profile</h1>
-        <p className="text-slate-600">Manage your account and preferences.</p>
+    <div className="p-3 md:p-5 max-w-4xl">
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">Profile</h1>
+        <p className="text-sm text-slate-600">Manage your account and preferences.</p>
       </div>
 
       {message && (

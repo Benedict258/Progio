@@ -32,12 +32,12 @@ const navItems: NavItem[] = [
   {
     label: "Dashboard",
     href: "/dashboard",
-    icon: <LayoutDashboard size={20} />,
+    icon: <LayoutDashboard size={18} />,
   },
   {
     label: "Grants",
     href: "/grants",
-    icon: <FileText size={20} />,
+    icon: <FileText size={18} />,
     badge: "3 new",
     children: [
       { label: "All Grants", href: "/grants" },
@@ -50,7 +50,7 @@ const navItems: NavItem[] = [
   {
     label: "Scholarships",
     href: "/scholarships",
-    icon: <GraduationCap size={20} />,
+    icon: <GraduationCap size={18} />,
     children: [
       { label: "All Scholarships", href: "/scholarships" },
       { label: "Nye's Idea Studio", href: "/scholarships/brainstorm" },
@@ -62,7 +62,7 @@ const navItems: NavItem[] = [
   {
     label: "Research",
     href: "/research",
-    icon: <FlaskConical size={20} />,
+    icon: <FlaskConical size={18} />,
     children: [
       { label: "Literature Discovery", href: "/research/literature" },
       { label: "Citation Manager", href: "/research/citations" },
@@ -73,16 +73,16 @@ const navItems: NavItem[] = [
   {
     label: "Projects",
     href: "/projects",
-    icon: <FolderKanban size={20} />,
+    icon: <FolderKanban size={18} />,
     children: [
       { label: "Active Projects", href: "/projects" },
       { label: "Completed Projects", href: "/projects/completed" },
     ],
   },
   {
-    label: "Readiness Assessments",
+    label: "Readiness",
     href: "/readiness",
-    icon: <CheckCircle size={20} />,
+    icon: <CheckCircle size={18} />,
     children: [
       { label: "Grant Readiness", href: "/readiness/grant" },
       { label: "Scholarship Readiness", href: "/readiness/scholarship" },
@@ -92,16 +92,16 @@ const navItems: NavItem[] = [
   {
     label: "Profile",
     href: "/profile",
-    icon: <User size={20} />,
+    icon: <User size={18} />,
   },
   {
-    label: "Demo Flow",
+    label: "Demo",
     href: "/demo",
-    icon: <Rocket size={20} />,
+    icon: <Rocket size={18} />,
   },
 ];
 
-function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string }) {
+function NavItemComponent({ item, pathname, onMobileClose }: { item: NavItem; pathname: string; onMobileClose?: () => void }) {
   const [expanded, setExpanded] = useState(
     item.children?.some((child) => pathname === child.href || pathname.startsWith(child.href + "/"))
   );
@@ -115,7 +115,7 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
         <button
           onClick={() => setExpanded(!expanded)}
           className={cn(
-            "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+            "flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-[13px] font-medium transition-colors",
             isActive
               ? "bg-slate-800 text-white"
               : "text-slate-300 hover:bg-slate-800 hover:text-white"
@@ -124,20 +124,21 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
           {item.icon}
           <span className="flex-1 text-left">{item.label}</span>
           {item.badge && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-indigo-600 text-white rounded-full">
+            <span className="text-[9px] font-bold px-1.5 py-0.5 bg-indigo-600 text-white rounded-full">
               {item.badge}
             </span>
           )}
-          {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </button>
         {expanded && item.children && (
-          <div className="ml-9 mt-1 space-y-0.5">
+          <div className="ml-6 mt-0.5 space-y-0.5">
             {item.children.map((child) => (
               <Link
                 key={child.href}
                 href={child.href}
+                onClick={onMobileClose}
                 className={cn(
-                  "block px-3 py-2 rounded-lg text-sm transition-colors",
+                  "block px-2.5 py-1.5 rounded-md text-[12px] transition-colors",
                   pathname === child.href
                     ? "bg-indigo-600 text-white font-medium"
                     : "text-slate-400 hover:bg-slate-800 hover:text-white"
@@ -155,8 +156,9 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
   return (
     <Link
       href={item.href}
+      onClick={onMobileClose}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+        "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-colors",
         isActive
           ? "bg-slate-800 text-white"
           : "text-slate-300 hover:bg-slate-800 hover:text-white"
@@ -165,7 +167,7 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
       {item.icon}
       <span>{item.label}</span>
       {item.badge && (
-        <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 bg-indigo-600 text-white rounded-full">
+        <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 bg-indigo-600 text-white rounded-full">
           {item.badge}
         </span>
       )}
@@ -182,7 +184,7 @@ export function Sidebar() {
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-slate-900 text-white rounded-lg"
+        className="lg:hidden fixed top-3 left-3 z-50 p-2 bg-slate-900 text-white rounded-lg shadow-lg"
       >
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
@@ -198,32 +200,37 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-40 w-64 bg-[#0f172a] text-white flex flex-col transition-transform duration-200 ease-in-out",
+          "fixed lg:static inset-y-0 left-0 z-40 w-60 bg-[#0f172a] text-white flex flex-col transition-transform duration-200 ease-in-out",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-slate-800">
+        <div className="h-14 flex items-center px-4 border-b border-slate-800">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <FlaskConical size={18} className="text-white" />
+            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <FlaskConical size={16} className="text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight">Progio</span>
+            <span className="text-lg font-bold tracking-tight">Progio</span>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
           {navItems.map((item) => (
-            <NavItemComponent key={item.href} item={item} pathname={pathname} />
+            <NavItemComponent
+              key={item.href}
+              item={item}
+              pathname={pathname}
+              onMobileClose={() => setMobileOpen(false)}
+            />
           ))}
         </nav>
 
         {/* Bottom */}
-        <div className="p-4 border-t border-slate-800">
-          <div className="flex items-center justify-between px-3 py-2">
-            <div className="text-xs text-slate-500 uppercase tracking-wider">
-              Progio v0.1
+        <div className="px-3 py-2 border-t border-slate-800">
+          <div className="flex items-center justify-between px-2 py-1.5">
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider">
+              v0.1
             </div>
             <AlertBell />
           </div>

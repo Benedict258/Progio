@@ -213,10 +213,10 @@ export default function AllGrantsPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Discover Grants</h1>
-        <p className="text-slate-600">
+    <div className="p-3 md:p-5">
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">Discover Grants</h1>
+        <p className="text-sm text-slate-600">
           Find opportunities that match your research and academic goals.
         </p>
       </div>
@@ -274,7 +274,7 @@ export default function AllGrantsPage() {
         </div>
       </GatedContent>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {loading ? (
           <LoadingState />
         ) : filteredGrants.length === 0 ? (

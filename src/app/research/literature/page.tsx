@@ -108,14 +108,14 @@ export default function LiteratureDiscoveryPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-3 md:p-5 max-w-7xl mx-auto space-y-4">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Literature Discovery</h1>
-        <p className="text-slate-500 mt-1">AI-powered search for academic papers and literature.</p>
+        <p className="text-sm text-slate-500 mt-0.5">AI-powered search for academic papers and literature.</p>
       </div>
 
       {/* Search Section */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
         <div className="flex gap-3">
           <div className="flex-1 relative">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />

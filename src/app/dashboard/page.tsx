@@ -1034,7 +1034,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-3 md:p-5 max-w-7xl mx-auto space-y-4">
       {creating && (
         <div className="fixed inset-0 bg-white/80 z-50 flex items-center justify-center">
           <div className="flex items-center gap-3 bg-white px-6 py-4 rounded-xl shadow-lg border border-slate-200">
@@ -1101,7 +1101,7 @@ export default function DashboardPage() {
         </div>
       </GatedContent>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left column */}
         <div className="space-y-6">
           <MatchingOpportunities

@@ -201,10 +201,10 @@ export default function AllScholarshipsPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Discover Scholarships</h1>
-        <p className="text-slate-600">
+    <div className="p-3 md:p-5">
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">Discover Scholarships</h1>
+        <p className="text-sm text-slate-600">
           Find opportunities that match your academic goals and aspirations.
         </p>
       </div>
@@ -262,7 +262,7 @@ export default function AllScholarshipsPage() {
         </div>
       </GatedContent>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredScholarships.length === 0 ? (
           <EmptyState />
         ) : (

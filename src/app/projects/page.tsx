@@ -212,11 +212,11 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-3 md:p-5 max-w-7xl mx-auto space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Active Projects</h1>
-          <p className="text-slate-500 mt-1">Your ongoing projects and milestones.</p>
+          <p className="text-sm text-slate-500 mt-0.5">Your ongoing projects and milestones.</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-600">
           <FolderOpen size={18} className="text-indigo-600" />
