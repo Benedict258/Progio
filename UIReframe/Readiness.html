@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Grant Readiness Assessment | ScholarAI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F8FAFC;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .drawer-transition {
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .step-node.active {
+      @apply ring-4 ring-primary-fixed-dim border-primary;
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "on-primary-fixed-variant": "#2f2ebe",
+                  "background-card": "#FFFFFF",
+                  "warning": "#F59E0B",
+                  "tertiary-fixed": "#ffdcc5",
+                  "on-tertiary-fixed": "#301400",
+                  "on-primary-fixed": "#07006c",
+                  "primary-container": "#6063ee",
+                  "on-tertiary-fixed-variant": "#703700",
+                  "surface": "#faf8ff",
+                  "danger": "#EF4444",
+                  "secondary-fixed": "#6ffbbe",
+                  "text-primary": "#0F172A",
+                  "surface-container-high": "#e2e7ff",
+                  "inverse-primary": "#c0c1ff",
+                  "on-secondary-fixed": "#002113",
+                  "secondary-container": "#6cf8bb",
+                  "on-error": "#ffffff",
+                  "inverse-on-surface": "#eef0ff",
+                  "tertiary": "#904900",
+                  "surface-dim": "#d2d9f4",
+                  "primary-fixed-dim": "#c0c1ff",
+                  "tertiary-container": "#b55d00",
+                  "surface-container-lowest": "#ffffff",
+                  "surface-bright": "#faf8ff",
+                  "on-surface": "#131b2e",
+                  "surface-container-low": "#f2f3ff",
+                  "on-primary": "#ffffff",
+                  "secondary": "#006c49",
+                  "surface-tint": "#494bd6",
+                  "text-secondary": "#64748B",
+                  "background": "#faf8ff",
+                  "secondary-fixed-dim": "#4edea3",
+                  "primary-fixed": "#e1e0ff",
+                  "on-error-container": "#93000a",
+                  "error": "#ba1a1a",
+                  "tertiary-fixed-dim": "#ffb783",
+                  "surface-container-highest": "#dae2fd",
+                  "outline": "#767586",
+                  "on-background": "#131b2e",
+                  "on-surface-variant": "#464554",
+                  "on-secondary": "#ffffff",
+                  "on-primary-container": "#fffbff",
+                  "surface-container": "#eaedff",
+                  "border-subtle": "#E2E8F0",
+                  "inverse-surface": "#283044",
+                  "error-container": "#ffdad6",
+                  "outline-variant": "#c7c4d7",
+                  "on-tertiary-container": "#fffbff",
+                  "surface-variant": "#dae2fd",
+                  "primary": "#4648d4",
+                  "on-secondary-container": "#00714d",
+                  "background-main": "#F8FAFC",
+                  "on-tertiary": "#ffffff",
+                  "on-secondary-fixed-variant": "#005236"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "stack-md": "16px",
+                  "gutter": "24px",
+                  "sidebar-width": "256px",
+                  "margin-mobile": "16px",
+                  "container-max": "1440px",
+                  "stack-sm": "8px",
+                  "stack-lg": "32px"
+          },
+          "fontFamily": {
+                  "headline-lg": ["Inter"],
+                  "body-md": ["Inter"],
+                  "label-sm": ["Inter"],
+                  "headline-md": ["Inter"],
+                  "label-md": ["Inter"],
+                  "headline-sm": ["Inter"]
+          },
+          "fontSize": {
+                  "headline-lg": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                  "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                  "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                  "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                  "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                  "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}]
+          }
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-background-main text-on-surface">
+<!-- Sidebar (JSON Command: SideNavBar) -->
+<aside class="fixed left-0 top-0 h-full w-[256px] bg-inverse-surface flex flex-col py-stack-lg z-50">
+<div class="px-6 mb-stack-lg">
+<div class="text-headline-md font-headline-md font-bold text-surface-bright mb-1">Scholar Workspace</div>
+<div class="text-label-md font-label-md text-outline-variant">Academic Research Portal</div>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<!-- Active Item: Grants -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-on-primary font-bold border-l-4 border-primary-fixed-dim" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-label-md font-label-md">Grants</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="text-label-md font-label-md">Scholarships</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">science</span>
+<span class="text-label-md font-label-md">Research</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="text-label-md font-label-md">Projects</span>
+</a>
+</nav>
+<div class="mt-auto px-4 border-t border-on-surface-variant/20 pt-stack-md">
+<button class="w-full mb-stack-md bg-primary-container text-on-primary-container py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined">add</span>
+<span>New Project</span>
+</button>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-outline-variant hover:text-surface-bright transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-outline-variant hover:text-surface-bright transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="text-label-md font-label-md">Support</span>
+</a>
+</div>
+</aside>
+<!-- Top Navigation (JSON Command: TopNavBar) -->
+<header class="flex justify-between items-center h-16 px-gutter fixed top-0 right-0 left-[256px] bg-surface border-b border-border-subtle z-40 transition-all">
+<div class="flex items-center gap-4">
+<div class="text-headline-sm font-headline-sm font-black text-primary">ScholarAI</div>
+<div class="relative ml-8">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary scale-75">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-body-md focus:ring-2 focus:ring-primary w-64 transition-all" placeholder="Search funding sources..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-primary transition-colors active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-primary transition-colors active:scale-95">
+<span class="material-symbols-outlined">history</span>
+</button>
+<div class="h-8 w-[1px] bg-border-subtle mx-2"></div>
+<img class="w-10 h-10 rounded-full border border-border-subtle cursor-pointer hover:ring-2 hover:ring-primary transition-all" data-alt="A professional headshot of a female researcher in her late 30s wearing modern glasses and a smart-casual blazer. The lighting is soft and natural, coming from a large window in a high-end academic library background. The image has a clean, light-mode corporate aesthetic with subtle blue and gray tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnehkcgcKo_3Xi19O8XSXMZuFTr_G9w_Fylww88xIDATNYyB-T9yy5MzHi3y14o2njYih0BNpcNxSvxBkogoI1np4Bu9ur72oqSQmGhOVLraeBY4KJJIBNSJm9i4ODUuPKkS_W8nmAZUIejiTtdHgHHbQYbcjPq-TUzcnTuRrQ53LvYRGb_2tKPJ3HhwWg3xrCKs4sARkZt2NKpOQONJz2I7kMZ4h2jwPvD-ZSV9qGtpKHFQ5zNlEq"/>
+</div>
+</header>
+<!-- Main Content Stage -->
+<main class="ml-[256px] pt-16 min-h-screen">
+<div class="max-w-[1440px] mx-auto p-gutter">
+<!-- Page Header -->
+<div class="mb-stack-lg">
+<nav class="flex gap-2 text-label-md text-text-secondary mb-2">
+<span>Grants</span>
+<span>/</span>
+<span class="text-primary font-bold">Readiness Assessment</span>
+</nav>
+<h1 class="text-headline-lg font-headline-lg text-text-primary">Grant Readiness Assessment</h1>
+<p class="text-body-md text-text-secondary mt-1 max-w-2xl">Validate your project's eligibility and alignment before starting the formal application process.</p>
+</div>
+<!-- Step 1: Select Opportunity (Asymmetric Bento Layout) -->
+<section class="mb-12">
+<div class="flex items-center gap-4 mb-stack-md">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-headline-sm">1</div>
+<h2 class="text-headline-md font-headline-md text-text-primary">Select an Opportunity</h2>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Opportunity Cards (Wait for Selection) -->
+<div class="lg:col-span-8 space-y-4">
+<!-- NIH R01 Card -->
+<button class="group w-full flex text-left p-6 bg-background-card border border-border-subtle rounded-xl hover:border-primary hover:shadow-md transition-all duration-300" onclick="toggleFitDrawer('NIH R01')">
+<div class="w-16 h-16 rounded-lg bg-surface-container-high flex items-center justify-center text-primary-container shrink-0">
+<span class="material-symbols-outlined text-[40px]">account_balance</span>
+</div>
+<div class="ml-6 flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-headline-sm font-headline-sm text-text-primary group-hover:text-primary transition-colors">NIH R01 Research Project Grant</h3>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-primary-fixed-variant text-label-sm uppercase tracking-wider">Public Health</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-primary-fixed-variant text-label-sm uppercase tracking-wider">Biomedical</span>
+</div>
+</div>
+<div class="text-right">
+<span class="text-label-md font-bold text-primary">$2.5M Max</span>
+<p class="text-label-sm text-text-secondary">Deadline: June 5, 2024</p>
+</div>
+</div>
+<p class="text-body-md text-text-secondary mt-4 line-clamp-2">The Research Project Grant (R01) is the original and historically oldest grant mechanism used by NIH, supporting health-related research and development.</p>
+</div>
+</button>
+<!-- Ford Foundation Card -->
+<button class="group w-full flex text-left p-6 bg-background-card border border-border-subtle rounded-xl hover:border-primary hover:shadow-md transition-all duration-300" onclick="toggleFitDrawer('Ford Foundation')">
+<div class="w-16 h-16 rounded-lg bg-tertiary-fixed flex items-center justify-center text-tertiary-container shrink-0">
+<span class="material-symbols-outlined text-[40px]">diversity_3</span>
+</div>
+<div class="ml-6 flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-headline-sm font-headline-sm text-text-primary group-hover:text-primary transition-colors">Ford Foundation Global Scholars</h3>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 rounded bg-tertiary-fixed-dim/20 text-on-tertiary-fixed-variant text-label-sm uppercase tracking-wider">Social Justice</span>
+<span class="px-2 py-0.5 rounded bg-tertiary-fixed-dim/20 text-on-tertiary-fixed-variant text-label-sm uppercase tracking-wider">Equity</span>
+</div>
+</div>
+<div class="text-right">
+<span class="text-label-md font-bold text-tertiary">$1.2M Max</span>
+<p class="text-label-sm text-text-secondary">Deadline: Rolling</p>
+</div>
+</div>
+<p class="text-body-md text-text-secondary mt-4 line-clamp-2">Focusing on reducing inequality, this grant supports leaders and organizations tackling the drivers of global social and economic disparity.</p>
+</div>
+</button>
+</div>
+<!-- Quick Stats / Tip Column -->
+<div class="lg:col-span-4">
+<div class="bg-primary p-6 rounded-xl text-on-primary">
+<h4 class="font-bold text-headline-sm mb-4">Readiness Tip</h4>
+<p class="text-body-md opacity-90 leading-relaxed">Most researchers select opportunities based on dollar amount, but alignment with the funder’s strategic pillars is the #1 predictor of success. Use the 'Fit Overview' to see your score.</p>
+<div class="mt-6 pt-6 border-t border-on-primary/20">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-on-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<span class="text-label-md">Verified 2024 Guidelines</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Step 2: Assessment Questionnaire -->
+<section class="opacity-60 pointer-events-none" id="step-2-section">
+<div class="flex items-center gap-4 mb-stack-md">
+<div class="w-10 h-10 rounded-full bg-outline-variant text-background-card flex items-center justify-center font-bold text-headline-sm">2</div>
+<h2 class="text-headline-md font-headline-md text-text-primary">Alignment Questionnaire</h2>
+</div>
+<div class="bg-background-card border border-border-subtle rounded-xl p-8">
+<!-- Progress Bar -->
+<div class="mb-8">
+<div class="flex justify-between items-end mb-2">
+<span class="text-label-md font-bold text-primary uppercase">Progress</span>
+<span class="text-label-md text-text-secondary">Question 4 of 12</span>
+</div>
+<div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="w-1/3 h-full bg-primary transition-all duration-500"></div>
+</div>
+</div>
+<!-- Multiple Choice Question -->
+<div class="max-w-3xl">
+<h3 class="text-headline-sm font-headline-sm text-text-primary mb-6">Does your research proposal explicitly address the funder's priority for "Cross-Disciplinary Technological Innovation" in low-resource settings?</h3>
+<div class="space-y-3">
+<label class="flex items-center p-4 border border-border-subtle rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors group">
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="readiness_q" type="radio"/>
+<span class="ml-4 text-body-md text-on-surface">Yes, this is a core pillar of the project design.</span>
+</label>
+<label class="flex items-center p-4 border border-border-subtle rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors group">
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="readiness_q" type="radio"/>
+<span class="ml-4 text-body-md text-on-surface">Partially, it is mentioned as a secondary outcome.</span>
+</label>
+<label class="flex items-center p-4 border border-border-subtle rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors group">
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="readiness_q" type="radio"/>
+<span class="ml-4 text-body-md text-on-surface">No, but we can integrate this focus area easily.</span>
+</label>
+<label class="flex items-center p-4 border border-border-subtle rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors group">
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="readiness_q" type="radio"/>
+<span class="ml-4 text-body-md text-on-surface">This is not applicable to our specific research niche.</span>
+</label>
+</div>
+<div class="mt-10 flex gap-4">
+<button class="px-6 py-2.5 rounded-lg border border-border-subtle font-bold text-text-secondary hover:bg-surface-container transition-colors">Previous</button>
+<button class="px-8 py-2.5 rounded-lg bg-primary text-on-primary font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Next Question</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Fit Drawer (Sliding from Right) -->
+<div class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm z-[60] opacity-0 pointer-events-none transition-opacity duration-300" id="overlay"></div>
+<div class="fixed top-0 right-0 h-full w-full md:w-[500px] bg-background-card shadow-2xl z-[70] transform translate-x-full drawer-transition flex flex-col" id="fit-drawer">
+<!-- Drawer Header -->
+<div class="p-gutter flex justify-between items-start border-b border-border-subtle">
+<div>
+<h2 class="text-headline-md font-headline-md text-text-primary">Opportunity Fit Overview</h2>
+<p class="text-body-md text-text-secondary" id="drawer-subtitle">NIH R01 Analysis</p>
+</div>
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors" onclick="toggleFitDrawer()">
+<span class="material-symbols-outlined text-outline">close</span>
+</button>
+</div>
+<!-- Drawer Content (Scrollable) -->
+<div class="flex-1 overflow-y-auto p-gutter space-y-8 hide-scrollbar">
+<!-- Score Circle -->
+<div class="flex flex-col items-center justify-center p-8 bg-surface-container-low rounded-2xl relative overflow-hidden">
+<div class="relative w-40 h-40 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90">
+<circle class="text-border-subtle" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-width="12"></circle>
+<circle class="text-primary" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-dasharray="440" stroke-dashoffset="110" stroke-width="12"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-[40px] font-black text-text-primary">75%</span>
+<span class="text-label-md font-bold text-primary uppercase">Readiness</span>
+</div>
+</div>
+<p class="text-center text-body-md text-text-secondary mt-6">Based on your existing research history and profile keywords, you have a <strong>High Potential</strong> fit for this grant.</p>
+</div>
+<!-- Criteria Alignment Grid -->
+<div>
+<h3 class="text-label-md font-bold text-text-primary uppercase tracking-widest mb-4">Criteria Alignment</h3>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 rounded-xl border border-border-subtle bg-white">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-secondary text-sm">check_circle</span>
+<span class="text-label-md font-bold">Eligibility</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="w-full h-full bg-secondary"></div>
+</div>
+</div>
+<div class="p-4 rounded-xl border border-border-subtle bg-white">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+<span class="text-label-md font-bold">Scope</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="w-[85%] h-full bg-primary"></div>
+</div>
+</div>
+<div class="p-4 rounded-xl border border-border-subtle bg-white">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-warning text-sm">info</span>
+<span class="text-label-md font-bold">Funding</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="w-[45%] h-full bg-warning"></div>
+</div>
+</div>
+<div class="p-4 rounded-xl border border-border-subtle bg-white">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+<span class="text-label-md font-bold">Strategic</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="w-[70%] h-full bg-primary"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recommendations -->
+<div>
+<h3 class="text-label-md font-bold text-text-primary uppercase tracking-widest mb-4">Strategic Recommendations</h3>
+<div class="space-y-3">
+<div class="flex gap-4 p-4 rounded-xl bg-primary-fixed/30 border border-primary/10">
+<span class="material-symbols-outlined text-primary shrink-0">lightbulb</span>
+<p class="text-body-md text-on-primary-fixed-variant">Expand Section 2.1 to better highlight the "Biomedical Engineering" intersection. This matches the NIH's 2024 sub-priority.</p>
+</div>
+<div class="flex gap-4 p-4 rounded-xl bg-tertiary-fixed/30 border border-tertiary/10">
+<span class="material-symbols-outlined text-tertiary shrink-0">history_edu</span>
+<p class="text-body-md text-on-tertiary-fixed-variant">Update project timeline to account for the mandatory 3-month ethics review period required for R01 applicants.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Drawer Footer -->
+<div class="p-gutter bg-surface-container-low border-t border-border-subtle mt-auto">
+<button class="w-full py-4 rounded-xl bg-primary text-on-primary font-bold text-headline-sm hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-primary/20" onclick="selectOpportunity()">
+        Confirm Selection &amp; Start Assessment
+      </button>
+</div>
+</div>
+<script>
+    function toggleFitDrawer(name) {
+      const drawer = document.getElementById('fit-drawer');
+      const overlay = document.getElementById('overlay');
+      const subtitle = document.getElementById('drawer-subtitle');
+
+      if (name) subtitle.textContent = name + ' Analysis';
+
+      drawer.classList.toggle('translate-x-full');
+      overlay.classList.toggle('opacity-0');
+      overlay.classList.toggle('pointer-events-none');
+    }
+
+    function selectOpportunity() {
+      // Close drawer
+      toggleFitDrawer();
+      
+      // Enable Step 2
+      const step2 = document.getElementById('step-2-section');
+      step2.classList.remove('opacity-60', 'pointer-events-none');
+      
+      // Scroll to Step 2
+      setTimeout(() => {
+        step2.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  </script>
+</body></html>

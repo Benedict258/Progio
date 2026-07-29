@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ScholarAI | Grant Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ai-glow {
+            box-shadow: 0 0 20px rgba(70, 72, 212, 0.15);
+        }
+        .editor-cursor {
+            border-right: 2px solid #4648d4;
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            from, to { border-color: transparent; }
+            50% { border-color: #4648d4; }
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dae2fd;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c7c4d7;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed-variant": "#2f2ebe",
+                      "background-card": "#FFFFFF",
+                      "warning": "#F59E0B",
+                      "tertiary-fixed": "#ffdcc5",
+                      "on-tertiary-fixed": "#301400",
+                      "on-primary-fixed": "#07006c",
+                      "primary-container": "#6063ee",
+                      "on-tertiary-fixed-variant": "#703700",
+                      "surface": "#faf8ff",
+                      "danger": "#EF4444",
+                      "secondary-fixed": "#6ffbbe",
+                      "text-primary": "#0F172A",
+                      "surface-container-high": "#e2e7ff",
+                      "inverse-primary": "#c0c1ff",
+                      "on-secondary-fixed": "#002113",
+                      "secondary-container": "#6cf8bb",
+                      "on-error": "#ffffff",
+                      "inverse-on-surface": "#eef0ff",
+                      "tertiary": "#904900",
+                      "surface-dim": "#d2d9f4",
+                      "primary-fixed-dim": "#c0c1ff",
+                      "tertiary-container": "#b55d00",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-bright": "#faf8ff",
+                      "on-surface": "#131b2e",
+                      "surface-container-low": "#f2f3ff",
+                      "on-primary": "#ffffff",
+                      "secondary": "#006c49",
+                      "surface-tint": "#494bd6",
+                      "text-secondary": "#64748B",
+                      "background": "#faf8ff",
+                      "secondary-fixed-dim": "#4edea3",
+                      "primary-fixed": "#e1e0ff",
+                      "on-error-container": "#93000a",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "surface-container-highest": "#dae2fd",
+                      "outline": "#767586",
+                      "on-background": "#131b2e",
+                      "on-surface-variant": "#464554",
+                      "on-secondary": "#ffffff",
+                      "on-primary-container": "#fffbff",
+                      "surface-container": "#eaedff",
+                      "border-subtle": "#E2E8F0",
+                      "inverse-surface": "#283044",
+                      "error-container": "#ffdad6",
+                      "outline-variant": "#c7c4d7",
+                      "on-tertiary-container": "#fffbff",
+                      "surface-variant": "#dae2fd",
+                      "primary": "#4648d4",
+                      "on-secondary-container": "#00714d",
+                      "background-main": "#F8FAFC",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed-variant": "#005236"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-md": "16px",
+                      "gutter": "24px",
+                      "sidebar-width": "256px",
+                      "margin-mobile": "16px",
+                      "container-max": "1440px",
+                      "stack-sm": "8px",
+                      "stack-lg": "32px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-sm": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background-main font-body-md text-text-primary overflow-hidden">
+<!-- Sidebar: SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[256px] bg-inverse-surface flex flex-col py-stack-lg z-50">
+<div class="px-gutter mb-stack-lg">
+<h1 class="text-headline-md font-headline-md font-bold text-surface-bright">Scholar Workspace</h1>
+<p class="text-label-md font-label-md text-outline-variant mt-1">Academic Research Portal</p>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<div class="text-label-sm font-label-sm text-outline-variant uppercase tracking-wider mb-2 px-4">Research Modules</div>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary text-on-primary font-bold border-l-4 border-primary-fixed-dim transition-all duration-200" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-label-md font-label-md">Grants</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-colors" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="text-label-md font-label-md">Scholarships</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-colors" href="#">
+<span class="material-symbols-outlined">science</span>
+<span class="text-label-md font-label-md">Research</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-colors" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="text-label-md font-label-md">Projects</span>
+</a>
+<div class="pt-stack-lg pb-2">
+<div class="text-label-sm font-label-sm text-outline-variant uppercase tracking-wider mb-2 px-4">Grant Sections</div>
+<div class="space-y-1">
+<button class="w-full flex items-center justify-between px-4 py-2 text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-colors">
+<span class="text-label-md font-label-md">Abstract</span>
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+</button>
+<button class="w-full flex items-center justify-between px-4 py-2 bg-surface-container-highest/10 text-surface-bright border-r-2 border-primary-fixed-dim">
+<span class="text-label-md font-label-md">Technical Plan</span>
+<span class="w-2 h-2 rounded-full bg-warning"></span>
+</button>
+<button class="w-full flex items-center justify-between px-4 py-2 text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-colors">
+<span class="text-label-md font-label-md">Budget Justification</span>
+</button>
+<button class="w-full flex items-center justify-between px-4 py-2 text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-colors">
+<span class="text-label-md font-label-md">Personnel</span>
+</button>
+</div>
+</div>
+</nav>
+<div class="px-4 mt-auto pt-4 border-t border-surface-container-highest/10">
+<button class="w-full bg-primary-container text-on-primary-container py-3 rounded-lg font-bold flex items-center justify-center gap-2 mb-stack-md hover:brightness-110 transition-all active:scale-95">
+<span class="material-symbols-outlined">add</span>
+<span class="text-label-md font-label-md">New Project</span>
+</button>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-outline-variant hover:text-surface-bright transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-outline-variant hover:text-surface-bright transition-colors" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="text-label-md font-label-md">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Header: TopNavBar -->
+<header class="fixed top-0 left-[256px] right-0 h-16 bg-surface border-b border-border-subtle flex items-center justify-between px-gutter z-40">
+<div class="flex items-center gap-6 flex-1">
+<span class="text-headline-sm font-headline-sm font-black text-primary">ScholarAI</span>
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[20px]">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-body-md focus:ring-2 focus:ring-primary/20 placeholder:text-outline-variant" placeholder="Search research papers or grants..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1 border-r border-border-subtle pr-4">
+<button class="p-2 text-text-secondary hover:text-primary transition-colors active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-text-secondary hover:text-primary transition-colors active:scale-95">
+<span class="material-symbols-outlined">history</span>
+</button>
+</div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right">
+<p class="text-label-md font-bold text-text-primary">Dr. Aris Thorne</p>
+<p class="text-[10px] text-text-secondary uppercase tracking-tighter font-bold">Principal Investigator</p>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-primary-container p-0.5">
+<img class="w-full h-full rounded-full object-cover" data-alt="A professional headshot of a middle-aged male researcher with a scholarly appearance, wearing glasses and a navy blue blazer. He is positioned against a clean, bright minimalist studio background. The lighting is soft and even, characteristic of a high-end light-mode UI aesthetic, conveying intelligence and authoritative academic expertise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCp44LrkPxamjnr7eSkX5bjjGj8KrltOu3toRedti-Zzl3tRniE-oxS-ORjAl4MTjxaIMLJBSptwF4rl4d2mqkY-ltg7r6LpamvFqR2xBPNoMbzedtq3bCoVjPchvLGrRYeGra66POC5KCMF3JD-A_UogMtKPfTaOdGSJSHgMlKeaoUQ8MyxK6MFcHDDBZt38-8tA-DHRRB-Ef6Oh5znuf5H6UsVs7HE7KNDDmsOQSrZJbxsvp_XkmO"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Stage -->
+<main class="ml-[256px] pt-16 h-screen flex flex-col">
+<!-- Editor Header -->
+<div class="bg-surface flex items-center justify-between px-8 py-4 border-b border-border-subtle">
+<div>
+<h2 class="text-headline-sm font-headline-sm text-text-primary">Technical Plan: Quantum Entanglement Scaling</h2>
+<nav class="flex gap-4 mt-1">
+<span class="text-label-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">edit</span> Draft 4.2</span>
+<span class="text-label-sm text-text-secondary flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">group</span> Shared with 3 collaborators</span>
+</nav>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-4 py-2 rounded-lg border border-border-subtle text-label-md font-bold hover:bg-surface-container-low transition-colors">Export PDF</button>
+<button class="px-4 py-2 rounded-lg bg-primary text-on-primary text-label-md font-bold ai-glow hover:brightness-110 transition-all">Submit Application</button>
+</div>
+</div>
+<!-- Editor Canvas -->
+<div class="flex-1 overflow-y-auto bg-background-main p-stack-lg flex justify-center relative">
+<div class="w-full max-w-[850px] bg-background-card rounded-xl border border-border-subtle shadow-sm p-16 min-h-[1200px] mb-20 relative">
+<!-- Floating AI Toolbar (Visible on "selection") -->
+<div class="absolute top-[420px] left-1/2 -translate-x-1/2 bg-inverse-surface text-surface-bright rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl z-30 animate-in fade-in zoom-in duration-300" id="ai-toolbar">
+<div class="flex items-center gap-0.5 px-2 border-r border-surface-container-highest/20 mr-1">
+<span class="material-symbols-outlined text-primary-fixed-dim text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-label-md font-bold px-1">AI Assistant</span>
+</div>
+<button class="px-3 py-1.5 rounded-full hover:bg-surface-container-highest/10 text-label-md transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">school</span> Make Academic
+                    </button>
+<button class="px-3 py-1.5 rounded-full hover:bg-surface-container-highest/10 text-label-md transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">compress</span> Shorten
+                    </button>
+<button class="px-3 py-1.5 rounded-full bg-primary-container text-on-primary-container text-label-md font-bold transition-all flex items-center gap-1.5" onclick="toggleRefinement()">
+<span class="material-symbols-outlined text-[16px]">target</span> Align with Donor
+                    </button>
+</div>
+<!-- AI Refinement Popover -->
+<div class="hidden absolute top-[480px] left-1/2 -translate-x-1/2 w-[480px] bg-background-card rounded-xl border border-primary shadow-2xl z-40 overflow-hidden" id="refinement-popover">
+<div class="bg-primary-container/10 p-4 border-b border-primary/20 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+<span class="text-label-md font-bold text-primary">Donor Alignment Refinement</span>
+</div>
+<button class="material-symbols-outlined text-text-secondary hover:text-danger text-[20px]" onclick="toggleRefinement()">close</button>
+</div>
+<div class="p-6 space-y-4">
+<div class="space-y-2">
+<label class="text-label-sm font-bold text-text-secondary uppercase">Original Text</label>
+<p class="text-body-md text-text-secondary line-through bg-surface-container-low p-3 rounded-lg border border-border-subtle italic">
+                                "We are going to use some pretty cool new quantum tech to make sure our computers can handle the massive amounts of data without crashing."
+                            </p>
+</div>
+<div class="space-y-2">
+<label class="text-label-sm font-bold text-primary uppercase">Refined (Aligns with NIH Strategic Plan)</label>
+<p class="text-body-md text-text-primary bg-primary-container/5 p-3 rounded-lg border border-primary/20 font-medium">
+                                "Our methodology leverages state-of-the-art quantum topological scaling to ensure computational resilience, directly addressing the NIH's high-throughput genomic data processing mandates for 2025."
+                            </p>
+</div>
+</div>
+<div class="p-4 bg-surface border-t border-border-subtle flex justify-end gap-2">
+<button class="px-4 py-2 text-label-md font-bold text-text-secondary hover:text-text-primary">Discard</button>
+<button class="px-4 py-2 bg-primary text-on-primary rounded-lg text-label-md font-bold">Apply Changes</button>
+</div>
+</div>
+<!-- Editor Text Content -->
+<div class="prose prose-slate max-w-none">
+<h3 class="text-headline-md font-headline-md mb-6">4. Methodology and Technical Implementation</h3>
+<p class="text-body-md mb-6 leading-relaxed">
+                        The proposed research aims to bridge the gap between theoretical quantum stability and practical hardware constraints. By utilizing a hybrid error-correction protocol, we can sustain coherence times across a 128-qubit array. This advancement is critical for multi-modal data sets requiring sub-millisecond processing.
+                    </p>
+<div class="bg-primary-container/5 border-l-4 border-primary p-4 mb-6 relative">
+<span class="absolute -top-3 left-4 bg-primary text-on-primary text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-widest">Section Focus: Donor Priority #2</span>
+<p class="text-body-md italic text-primary-container font-medium mt-2">
+                            Highlight scalability in relation to public health infrastructure here to maximize score.
+                        </p>
+</div>
+<p class="text-body-md mb-6 leading-relaxed">
+<span class="bg-primary-container/20 border-b-2 border-primary-container">We are going to use some pretty cool new quantum tech to make sure our computers can handle the massive amounts of data without crashing.</span>
+                        Our preliminary testing indicates that this approach yields a 45% reduction in decoherence-related noise compared to current industry benchmarks (Smith et al., 2023).
+                    </p>
+<h4 class="text-headline-sm font-headline-sm mb-4">4.1 Scalability and Resilience</h4>
+<p class="text-body-md mb-6 leading-relaxed">
+                        A core component of our technical plan involves the deployment of decentralized quantum relay stations. These nodes act as regenerative points for entangled pairs, effectively extending the functional range of the network beyond the 50km threshold currently observed in urban environments.
+                    </p>
+<div class="my-stack-lg border rounded-xl border-border-subtle overflow-hidden">
+<div class="bg-surface px-4 py-2 border-b border-border-subtle flex items-center justify-between">
+<span class="text-label-sm font-bold text-text-secondary uppercase">Fig 4.2: Topological Growth Projections</span>
+<span class="material-symbols-outlined text-text-secondary text-[16px]">open_in_new</span>
+</div>
+<div class="h-64 bg-surface-container-lowest flex items-center justify-center relative overflow-hidden">
+
+</div>
+</div>
+<p class="text-body-md mb-6 leading-relaxed">
+                        Continuous monitoring via AI-driven heuristic analyzers will allow for real-time adjustments to the magnetic flux parameters. This ensures that environmental fluctuations—such as seismic activity or electromagnetic interference—do not compromise the integrity of the data stream.
+                        <span class="editor-cursor"></span>
+</p>
+</div>
+</div>
+</div>
+<!-- Footer: Status Indicator -->
+<footer class="h-10 bg-surface border-t border-border-subtle flex items-center justify-between px-gutter shrink-0">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="text-label-md text-text-secondary">Cloud Sync: <span class="font-bold text-secondary">All changes saved</span></span>
+</div>
+<div class="h-4 w-[1px] bg-border-subtle"></div>
+<div class="flex items-center gap-4">
+<span class="text-label-md text-text-secondary">Words: <span class="font-bold text-text-primary">2,415 / 3,000</span></span>
+<span class="text-label-md text-text-secondary">Pages: <span class="font-bold text-text-primary">8</span></span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 bg-warning/10 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-warning text-[14px]">warning</span>
+<span class="text-[11px] font-bold text-warning uppercase">2 Critical Citations Missing</span>
+</div>
+<div class="h-4 w-[1px] bg-border-subtle"></div>
+<button class="flex items-center gap-1 text-label-md font-bold text-primary hover:underline">
+<span class="material-symbols-outlined text-[16px]">history_edu</span>
+                    Version History
+                </button>
+</div>
+</footer>
+</main>
+<script>
+        function toggleRefinement() {
+            const popover = document.getElementById('refinement-popover');
+            const toolbar = document.getElementById('ai-toolbar');
+            
+            if (popover.classList.contains('hidden')) {
+                popover.classList.remove('hidden');
+                popover.classList.add('animate-in', 'fade-in', 'slide-in-from-top-4');
+                toolbar.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                popover.classList.add('hidden');
+                toolbar.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        // Simple interaction simulation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.getElementById('refinement-popover').classList.add('hidden');
+                document.getElementById('ai-toolbar').classList.remove('opacity-50', 'pointer-events-none');
+            }
+        });
+    </script>
+</body></html>

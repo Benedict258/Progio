@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ScholarAI - Literature Discovery</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dae2fd;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c7c4d7;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed-variant": "#2f2ebe",
+                      "background-card": "#FFFFFF",
+                      "warning": "#F59E0B",
+                      "tertiary-fixed": "#ffdcc5",
+                      "on-tertiary-fixed": "#301400",
+                      "on-primary-fixed": "#07006c",
+                      "primary-container": "#6063ee",
+                      "on-tertiary-fixed-variant": "#703700",
+                      "surface": "#faf8ff",
+                      "danger": "#EF4444",
+                      "secondary-fixed": "#6ffbbe",
+                      "text-primary": "#0F172A",
+                      "surface-container-high": "#e2e7ff",
+                      "inverse-primary": "#c0c1ff",
+                      "on-secondary-fixed": "#002113",
+                      "secondary-container": "#6cf8bb",
+                      "on-error": "#ffffff",
+                      "inverse-on-surface": "#eef0ff",
+                      "tertiary": "#904900",
+                      "surface-dim": "#d2d9f4",
+                      "primary-fixed-dim": "#c0c1ff",
+                      "tertiary-container": "#b55d00",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-bright": "#faf8ff",
+                      "on-surface": "#131b2e",
+                      "surface-container-low": "#f2f3ff",
+                      "on-primary": "#ffffff",
+                      "secondary": "#006c49",
+                      "surface-tint": "#494bd6",
+                      "text-secondary": "#64748B",
+                      "background": "#faf8ff",
+                      "secondary-fixed-dim": "#4edea3",
+                      "primary-fixed": "#e1e0ff",
+                      "on-error-container": "#93000a",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "surface-container-highest": "#dae2fd",
+                      "outline": "#767586",
+                      "on-background": "#131b2e",
+                      "on-surface-variant": "#464554",
+                      "on-secondary": "#ffffff",
+                      "on-primary-container": "#fffbff",
+                      "surface-container": "#eaedff",
+                      "border-subtle": "#E2E8F0",
+                      "inverse-surface": "#283044",
+                      "error-container": "#ffdad6",
+                      "outline-variant": "#c7c4d7",
+                      "on-tertiary-container": "#fffbff",
+                      "surface-variant": "#dae2fd",
+                      "primary": "#4648d4",
+                      "on-secondary-container": "#00714d",
+                      "background-main": "#F8FAFC",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed-variant": "#005236"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-md": "16px",
+                      "gutter": "24px",
+                      "sidebar-width": "256px",
+                      "margin-mobile": "16px",
+                      "container-max": "1440px",
+                      "stack-sm": "8px",
+                      "stack-lg": "32px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-sm": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background-main font-body-md text-on-surface">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-[256px] bg-inverse-surface flex flex-col py-stack-lg z-50">
+<div class="px-6 mb-stack-lg">
+<h1 class="text-headline-md font-bold text-surface-bright tracking-tight">Scholar Workspace</h1>
+<p class="text-label-md text-outline-variant">Academic Research Portal</p>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-label-md font-label-md">Grants</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-colors" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="text-label-md font-label-md">Scholarships</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-on-primary font-bold border-l-4 border-primary-fixed-dim" href="#">
+<span class="material-symbols-outlined">science</span>
+<span class="text-label-md font-label-md">Research</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-colors" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="text-label-md font-label-md">Projects</span>
+</a>
+</nav>
+<div class="px-4 mt-auto space-y-2">
+<button class="w-full py-3 bg-primary-container text-on-primary-container rounded-lg font-bold text-label-md mb-6 hover:brightness-110 transition-all">
+                New Project
+            </button>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 transition-colors" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="text-label-md font-label-md">Support</span>
+</a>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 h-16 flex justify-between items-center px-gutter ml-[256px] w-[calc(100%-256px)] bg-surface border-b border-border-subtle z-40">
+<div class="flex items-center flex-1 max-w-2xl">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-low border border-border-subtle rounded-xl py-2 pl-10 pr-4 text-body-md focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" placeholder="Search literature, researchers, or DOIs..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6 ml-gutter">
+<div class="flex items-center gap-4">
+<button class="text-outline hover:text-primary transition-colors active:scale-95">
+<span class="material-symbols-outlined">history</span>
+</button>
+<button class="relative text-outline hover:text-primary transition-colors active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-danger rounded-full"></span>
+</button>
+</div>
+<div class="flex items-center gap-3 pl-6 border-l border-border-subtle">
+<span class="text-right hidden sm:block">
+<p class="text-label-md font-bold text-text-primary">Dr. Aris Thorne</p>
+<p class="text-[10px] text-text-secondary leading-none">Senior Fellow</p>
+</span>
+<img class="w-8 h-8 rounded-full object-cover border border-border-subtle" data-alt="A professional headshot of a middle-aged academic with glasses, wearing a neutral-toned blazer. The lighting is soft and professional, against a clean, light-colored background that emphasizes a high-end corporate research aesthetic. The person has a friendly but focused expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBV-Bc8GnDd6Rf7gZRFlSXj362aP-Soc6LiUP6tJx4dQon-8HS05GpW64Q23t_9vunq2AdjtKK2nupaYAz0gOR0grbNjxOSxn91TeDc9dsDanasaBlnPEQFEZrOawPIPg0bBpJ_r9abwiRVqrWMdkqcFcAoSHGhMcxHIt9BuBoxCbC-GGi3AJFr0Tz6ALjSM4MkUUtcVmU3DzPqhbdte_76Yx1nVxiXKqvkN0mxwX2BwnUkBHTL3jVX"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-[256px] pt-16 min-h-screen">
+<div class="max-w-[1440px] mx-auto p-gutter">
+<!-- Breadcrumbs & Stats -->
+<div class="flex justify-between items-end mb-stack-lg">
+<div>
+<nav class="flex items-center gap-2 text-label-md text-text-secondary mb-2">
+<span>Research</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-semibold">Literature Discovery</span>
+</nav>
+<h2 class="text-headline-lg font-headline-lg text-text-primary">Discovery Hub</h2>
+</div>
+<div class="flex gap-4">
+<div class="bg-background-card border border-border-subtle px-4 py-2 rounded-xl flex items-center gap-3">
+<span class="p-2 bg-secondary-container/20 text-secondary rounded-lg">
+<span class="material-symbols-outlined">auto_graph</span>
+</span>
+<div>
+<p class="text-label-sm text-text-secondary uppercase">Indexed Papers</p>
+<p class="text-headline-sm font-bold text-text-primary">14.2M</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Bento Layout Content -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Filters Sidebar (Bento Column 1) -->
+<aside class="col-span-12 lg:col-span-3 space-y-stack-md">
+<div class="bg-background-card border border-border-subtle rounded-xl p-stack-md">
+<h3 class="text-headline-sm mb-4">Discovery Filters</h3>
+<div class="space-y-4">
+<div>
+<label class="text-label-md font-bold text-text-secondary block mb-2 uppercase">Time Horizon</label>
+<select class="w-full bg-surface-container-low border border-border-subtle rounded-lg py-2 px-3 text-body-md focus:ring-primary focus:border-primary">
+<option>Last 12 Months</option>
+<option>Last 5 Years</option>
+<option>All Time</option>
+</select>
+</div>
+<div>
+<label class="text-label-md font-bold text-text-secondary block mb-2 uppercase">Subject Areas</label>
+<div class="space-y-2">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="rounded border-border-subtle text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-body-md group-hover:text-primary transition-colors">Machine Learning</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="rounded border-border-subtle text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-body-md group-hover:text-primary transition-colors">Cognitive Science</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-border-subtle text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-body-md group-hover:text-primary transition-colors">Quantum Physics</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-primary text-on-primary rounded-xl p-stack-md overflow-hidden relative">
+<div class="relative z-10">
+<h4 class="font-bold text-headline-sm mb-2">CiteAssistant Beta</h4>
+<p class="text-body-md opacity-90 mb-4">Generate annotated bibliographies in seconds using our AI engine.</p>
+<button class="w-full py-2 bg-on-primary text-primary font-bold rounded-lg hover:bg-primary-fixed-dim transition-colors">Try Now</button>
+</div>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[120px] opacity-10">smart_toy</span>
+</div>
+</aside>
+<!-- Search Results (Bento Column 2) -->
+<section class="col-span-12 lg:col-span-9 space-y-6">
+<!-- Search Stats -->
+<div class="flex items-center justify-between bg-surface-container border border-border-subtle rounded-xl px-6 py-4">
+<p class="text-body-md text-on-surface">Found <span class="font-bold">1,248</span> results for <span class="italic text-primary">"Neural Architecture Search"</span></p>
+<div class="flex items-center gap-2">
+<span class="text-label-md text-text-secondary">Sort by:</span>
+<button class="flex items-center gap-1 text-label-md font-bold text-primary">
+                                Relevance
+                                <span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Result Card 1 -->
+<div class="bg-background-card border border-border-subtle rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded-full border border-primary/20">PEER REVIEWED</span>
+<span class="text-label-sm text-text-secondary">March 2024 • Nature Machine Intelligence</span>
+</div>
+<h3 class="text-headline-md font-bold text-text-primary hover:text-primary cursor-pointer transition-colors leading-tight mb-2">
+                                        Transformers in the Wild: Efficient Architectures for Edge Computing Deployments
+                                    </h3>
+<p class="text-label-md text-text-secondary font-medium italic">Chen, L., Gupta, S., &amp; Rodriguez, M.</p>
+</div>
+<div class="flex flex-col items-end gap-2 shrink-0">
+<div class="text-right">
+<p class="text-[10px] text-text-secondary uppercase font-bold tracking-wider">Relevance Score</p>
+<div class="flex items-center gap-2">
+<div class="w-16 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[94%]"></div>
+</div>
+<span class="text-headline-sm font-black text-primary">94%</span>
+</div>
+</div>
+</div>
+</div>
+<p class="text-body-md text-text-primary/80 line-clamp-3 mb-6 leading-relaxed">
+                                This study introduces a novel class of transformer-based architectures specifically optimized for low-power edge devices. By implementing dynamic weight pruning and quantized attention mechanisms, we demonstrate a 45% reduction in latency compared to baseline models while maintaining 98% accuracy on standard benchmarks.
+                            </p>
+<div class="flex flex-wrap items-center gap-2 mb-6">
+<span class="px-3 py-1 bg-surface-container-low border border-border-subtle rounded-lg text-label-md text-text-primary">#NeuralNetworks</span>
+<span class="px-3 py-1 bg-surface-container-low border border-border-subtle rounded-lg text-label-md text-text-primary">#EdgeComputing</span>
+<span class="px-3 py-1 bg-surface-container-low border border-border-subtle rounded-lg text-label-md text-text-primary">#ModelEfficiency</span>
+</div>
+<div class="flex items-center justify-between pt-6 border-t border-border-subtle">
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-label-md font-bold hover:brightness-110 transition-all active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">bookmark</span>
+                                        Save
+                                    </button>
+<button class="flex items-center gap-2 px-4 py-2 border border-border-subtle text-text-primary rounded-lg text-label-md font-bold hover:bg-surface-container-low transition-all active:scale-95">
+<span class="material-symbols-outlined text-[20px]">format_quote</span>
+                                        Add Citation
+                                    </button>
+<button class="flex items-center gap-2 text-label-md text-primary font-bold hover:underline">
+<span class="material-symbols-outlined text-[20px]">link</span>
+                                        DOI: 10.1038/s42256-024-0012-x
+                                    </button>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-outline hover:text-danger transition-colors">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+<button class="p-2 text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">share</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Citation Manager Widget -->
+<div class="bg-surface-container-low px-6 py-4 border-t border-border-subtle flex items-center justify-between">
+<div class="flex items-center gap-4 flex-1">
+<span class="text-label-sm font-black text-text-secondary uppercase">APA Style</span>
+<p class="text-label-md text-text-primary italic truncate max-w-2xl" id="citation-text-1">
+                                    Chen, L., Gupta, S., &amp; Rodriguez, M. (2024). Transformers in the Wild: Efficient Architectures for Edge Computing Deployments. Nature Machine Intelligence, 6(3), 212-228.
+                                </p>
+</div>
+<button class="flex items-center gap-2 px-3 py-1 bg-background-card border border-border-subtle rounded-md text-label-md font-bold text-primary hover:border-primary transition-colors" onclick="copyToClipboard('citation-text-1')">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+                                Copy
+                            </button>
+</div>
+</div>
+<!-- Result Card 2 -->
+<div class="bg-background-card border border-border-subtle rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-1 bg-tertiary-container/10 text-tertiary text-[10px] font-bold rounded-full border border-tertiary/20">PRE-PRINT</span>
+<span class="text-label-sm text-text-secondary">February 2024 • arXiv:2402.15842</span>
+</div>
+<h3 class="text-headline-md font-bold text-text-primary hover:text-primary cursor-pointer transition-colors leading-tight mb-2">
+                                        Beyond Attention: Synthetic Data Generation for Robust Language Models
+                                    </h3>
+<p class="text-label-md text-text-secondary font-medium italic">Andersson, K. &amp; Schmidt, J.</p>
+</div>
+<div class="flex flex-col items-end gap-2 shrink-0">
+<div class="text-right">
+<p class="text-[10px] text-text-secondary uppercase font-bold tracking-wider">Relevance Score</p>
+<div class="flex items-center gap-2">
+<div class="w-16 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[82%]"></div>
+</div>
+<span class="text-headline-sm font-black text-primary">82%</span>
+</div>
+</div>
+</div>
+</div>
+<p class="text-body-md text-text-primary/80 line-clamp-3 mb-6 leading-relaxed">
+                                We explore the limitations of current self-attention mechanisms when faced with out-of-distribution prompts. Our proposed solution utilizes high-fidelity synthetic data generators to stress-test LLM kernels...
+                            </p>
+<div class="flex flex-wrap items-center gap-2 mb-6">
+<span class="px-3 py-1 bg-surface-container-low border border-border-subtle rounded-lg text-label-md text-text-primary">#NLP</span>
+<span class="px-3 py-1 bg-surface-container-low border border-border-subtle rounded-lg text-label-md text-text-primary">#SyntheticData</span>
+</div>
+<div class="flex items-center justify-between pt-6 border-t border-border-subtle">
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-4 py-2 border border-border-subtle text-text-primary rounded-lg text-label-md font-bold hover:bg-surface-container-low transition-all active:scale-95">
+<span class="material-symbols-outlined text-[20px]">bookmark</span>
+                                        Save
+                                    </button>
+<button class="flex items-center gap-2 px-4 py-2 border border-border-subtle text-text-primary rounded-lg text-label-md font-bold hover:bg-surface-container-low transition-all active:scale-95">
+<span class="material-symbols-outlined text-[20px]">format_quote</span>
+                                        Add Citation
+                                    </button>
+<button class="flex items-center gap-2 text-label-md text-primary font-bold hover:underline">
+<span class="material-symbols-outlined text-[20px]">link</span>
+                                        DOI: 10.48550/arXiv.2402.15842
+                                    </button>
+</div>
+</div>
+</div>
+<!-- Citation Manager Widget -->
+<div class="bg-surface-container-low px-6 py-4 border-t border-border-subtle flex items-center justify-between">
+<div class="flex items-center gap-4 flex-1">
+<span class="text-label-sm font-black text-text-secondary uppercase">APA Style</span>
+<p class="text-label-md text-text-primary italic truncate max-w-2xl" id="citation-text-2">
+                                    Andersson, K., &amp; Schmidt, J. (2024). Beyond Attention: Synthetic Data Generation for Robust Language Models. arXiv preprint arXiv:2402.15842.
+                                </p>
+</div>
+<button class="flex items-center gap-2 px-3 py-1 bg-background-card border border-border-subtle rounded-md text-label-md font-bold text-primary hover:border-primary transition-colors" onclick="copyToClipboard('citation-text-2')">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+                                Copy
+                            </button>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<script>
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = `<span class="material-symbols-outlined text-[16px]">check</span> Copied`;
+                btn.classList.add('border-secondary', 'text-secondary');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('border-secondary', 'text-secondary');
+                }, 2000);
+            });
+        }
+
+        // Search interaction
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('scale-[1.02]');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('scale-[1.02]');
+        });
+    </script>
+</body></html>
