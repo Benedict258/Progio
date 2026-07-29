@@ -11,6 +11,7 @@ import {
   Save,
   ArrowRight,
 } from "lucide-react";
+import { API_BASE } from "@/lib/api";
 
 export default function ResearchStudioPage() {
   const router = useRouter();
@@ -19,11 +20,13 @@ export default function ResearchStudioPage() {
   const [generating, setGenerating] = useState(false);
   const [streamingField, setStreamingField] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     if (!ideaText.trim()) return;
     setGenerating(true);
     setBlueprint({});
+    setError(null);
 
     try {
       const res = await fetch("http://localhost:8000/api/ai/brainstorm/freeform", {
@@ -35,7 +38,10 @@ export default function ResearchStudioPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.detail || "Generation failed");
+      }
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No stream");
 
@@ -72,8 +78,8 @@ export default function ResearchStudioPage() {
       }
 
       setBlueprint({ ...bp });
-    } catch {
-      // handle error
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Generation failed. Please try again.");
     } finally {
       setGenerating(false);
     }
@@ -127,6 +133,16 @@ export default function ResearchStudioPage() {
           methodology, and expected outcomes.
         </p>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          {error}
+          <button onClick={() => setError(null)} className="ml-2 text-red-500 hover:text-red-700 font-medium">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Input */}
       <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">

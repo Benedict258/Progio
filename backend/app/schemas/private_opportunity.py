@@ -53,6 +53,7 @@ class PrivateOpportunityResponse(BaseModel):
 
 class ParseExternalRequest(BaseModel):
     url: str | None = None
+    name: str | None = None
     type: str = Field(default="grant", description="grant | scholarship")
 
 

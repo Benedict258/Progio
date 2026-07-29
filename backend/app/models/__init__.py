@@ -6,6 +6,7 @@ from app.models.project import Project
 from app.models.readiness_assessment import ReadinessAssessment
 from app.models.alert_preference import AlertPreference
 from app.models.private_opportunity import PrivateOpportunity
+from app.models.notification import Notification
 
 __all__ = [
     "User",
@@ -16,4 +17,5 @@ __all__ = [
     "ReadinessAssessment",
     "AlertPreference",
     "PrivateOpportunity",
+    "Notification",
 ]

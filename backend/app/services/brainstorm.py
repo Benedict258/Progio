@@ -259,14 +259,31 @@ def generate_opportunity_concepts(user, opportunity, track_type: str = "grant"):
 def generate_freeform_blueprint(user, idea_text: str, track_type: str = "grant"):
     """Generate a structured proposal blueprint from a raw idea."""
     ctx = _build_brainstorm_context(user)
-    template = RESEARCH_STUDIO_TEMPLATES[0]
-    blueprint = {
-        "objectives": template["objectives_template"].format(**ctx),
-        "significance": template["significance_template"].format(**ctx),
-        "methodology": template["methodology_template"].format(**ctx),
-        "expected_impact": template["impact_template"].format(**ctx),
+    ctx["idea_text"] = idea_text
+
+    if track_type == "research":
+        template = RESEARCH_STUDIO_TEMPLATES[0]
+    else:
+        template = RESEARCH_STUDIO_TEMPLATES[0]
+
+    return {
+        "objectives": (
+            f"Based on the idea: \"{idea_text[:200]}\"\n\n"
+            + template["objectives_template"].format(**ctx)
+        ),
+        "significance": (
+            f"The applicant proposes: \"{idea_text[:200]}\"\n\n"
+            + template["significance_template"].format(**ctx)
+        ),
+        "methodology": (
+            f"Research concept: \"{idea_text[:200]}\"\n\n"
+            + template["methodology_template"].format(**ctx)
+        ),
+        "expected_impact": (
+            f"Proposed impact area: \"{idea_text[:200]}\"\n\n"
+            + template["impact_template"].format(**ctx)
+        ),
     }
-    return blueprint
 
 
 # ── Streaming Helpers ─────────────────────────────────────────────────────

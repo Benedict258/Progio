@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+import { apiFetch, apiFetchArray, apiPost, apiPut, apiDelete } from "../api";
 
 export interface PrivateOpportunity {
   id: string;
@@ -34,17 +34,13 @@ export interface ParsedExternal {
 const USER_ID = "user-001";
 
 export async function fetchPrivateOpportunities(type?: "grant" | "scholarship"): Promise<PrivateOpportunity[]> {
-  const params = new URLSearchParams({ user_id: USER_ID });
-  if (type) params.set("type", type);
-  const res = await fetch(`${API_BASE}/api/opportunities/private?${params}`);
-  if (!res.ok) throw new Error("Failed to fetch private opportunities");
-  return res.json();
+  const params: Record<string, string> = { user_id: USER_ID };
+  if (type) params.type = type;
+  return apiFetchArray<PrivateOpportunity>("/api/opportunities/private", { params });
 }
 
-export async function getPrivateOpportunity(id: string): Promise<PrivateOpportunity> {
-  const res = await fetch(`${API_BASE}/api/opportunities/private/${id}`);
-  if (!res.ok) throw new Error("Private opportunity not found");
-  return res.json();
+export async function getPrivateOpportunity(id: string): Promise<PrivateOpportunity | null> {
+  return apiFetch<PrivateOpportunity>(`/api/opportunities/private/${id}`);
 }
 
 export async function createPrivateOpportunity(data: {
@@ -60,55 +56,35 @@ export async function createPrivateOpportunity(data: {
   source_url?: string;
   guidelines?: string;
   is_parsed?: boolean;
-}): Promise<PrivateOpportunity> {
-  const res = await fetch(`${API_BASE}/api/opportunities/private`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...data, user_id: USER_ID }),
+}): Promise<PrivateOpportunity | null> {
+  return apiPost<PrivateOpportunity>("/api/opportunities/private", {
+    ...data,
+    user_id: USER_ID,
   });
-  if (!res.ok) throw new Error("Failed to create private opportunity");
-  return res.json();
 }
 
 export async function updatePrivateOpportunity(
   id: string,
   data: Partial<Omit<PrivateOpportunity, "id" | "user_id" | "created_at" | "updated_at">>
-): Promise<PrivateOpportunity> {
-  const res = await fetch(`${API_BASE}/api/opportunities/private/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Failed to update private opportunity");
-  return res.json();
+): Promise<PrivateOpportunity | null> {
+  return apiPut<PrivateOpportunity>(`/api/opportunities/private/${id}`, data);
 }
 
-export async function deletePrivateOpportunity(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/opportunities/private/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete private opportunity");
+export async function deletePrivateOpportunity(id: string): Promise<boolean> {
+  return apiDelete(`/api/opportunities/private/${id}`);
 }
 
-export async function parseExternalUrl(url: string, type: "grant" | "scholarship" = "grant"): Promise<ParsedExternal> {
-  const res = await fetch(`${API_BASE}/api/opportunities/parse-external`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url, type }),
-  });
-  if (!res.ok) throw new Error("Failed to parse external URL");
-  return res.json();
+export async function parseExternalUrl(url: string, type: "grant" | "scholarship" = "grant"): Promise<ParsedExternal | null> {
+  return apiPost<ParsedExternal>("/api/opportunities/parse-external", { url, type });
 }
 
 export async function createApplicationFromOpportunity(
   opportunityId: string,
   type: "grant" | "scholarship"
-): Promise<{ id: string }> {
-  const res = await fetch(`${API_BASE}/api/applications`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: USER_ID, opportunity_id: opportunityId, type }),
+): Promise<{ id: string } | null> {
+  return apiPost<{ id: string }>("/api/applications", {
+    user_id: USER_ID,
+    opportunity_id: opportunityId,
+    type,
   });
-  if (!res.ok) throw new Error("Failed to create application");
-  return res.json();
 }

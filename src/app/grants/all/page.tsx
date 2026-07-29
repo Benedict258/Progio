@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { toggleGrantSaved, isGrantSaved, getSavedGrants } from "@/lib/storage";
 import { GatedContent } from "@/components/GatedContent";
+import { apiFetch, apiPost } from "@/lib/api";
 
 function OpportunityCard({
   opportunity,
@@ -139,24 +140,25 @@ export default function AllGrantsPage() {
   useEffect(() => {
     async function fetchGrants() {
       try {
-        const res = await fetch(
-          "http://localhost:8000/api/opportunities/matches?user_id=user-001&type=grant"
+        const data = await apiFetch<{ matches?: Array<Record<string, unknown>> }>(
+          "/api/opportunities/matches",
+          { params: { user_id: "user-001", type: "grant" } }
         );
-        if (!res.ok) throw new Error("API error");
-        const data = await res.json();
-        const mapped: MatchOpportunity[] = data.matches.map(
-          (m: Record<string, unknown>) => ({
-            id: m.opportunity_id as string,
-            title: m.title as string,
-            provider: m.provider as string,
-            matchScore: Math.round(m.score as number),
-            deadline: m.deadline as string,
-            matchReasons: m.match_reasons as string[],
-            track: "grant" as const,
-            amount: (m.award_range as string) || undefined,
-          })
-        );
-        setGrants(mapped);
+        if (data?.matches) {
+          const mapped: MatchOpportunity[] = data.matches.map(
+            (m) => ({
+              id: m.opportunity_id as string,
+              title: m.title as string,
+              provider: m.provider as string,
+              matchScore: Math.round(m.score as number),
+              deadline: m.deadline as string,
+              matchReasons: m.match_reasons as string[],
+              track: "grant" as const,
+              amount: (m.award_range as string) || undefined,
+            })
+          );
+          setGrants(mapped);
+        }
       } catch {
         setGrants([]);
       } finally {
@@ -178,18 +180,13 @@ export default function AllGrantsPage() {
   const handleStartApplication = async (opportunityId: string) => {
     setCreating(opportunityId);
     try {
-      const res = await fetch("http://localhost:8000/api/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: "user-001",
-          opportunity_id: opportunityId,
-          type: "grant",
-        }),
+      const data = await apiPost<{ id: string }>("/api/applications", {
+        user_id: "user-001",
+        opportunity_id: opportunityId,
+        type: "grant",
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      if (data) {
         router.push(`/grants/applications/${data.id}`);
       } else {
         const app = `app-${Date.now()}`;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -14,6 +14,7 @@ import {
   Save,
   BarChart3,
 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface Concept {
   title: string;
@@ -48,25 +49,29 @@ export default function ScholarshipsBrainstormPage() {
   const [blueprint, setBlueprint] = useState<Record<string, string>>({});
   const [streamingField, setStreamingField] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [scholarshipName, setScholarshipName] = useState("");
+  const [parsedOpp, setParsedOpp] = useState<Record<string, unknown> | null>(null);
 
   const fetchOpportunities = useCallback(async () => {
     setLoadingOpps(true);
     try {
-      const res = await fetch(
-        "http://localhost:8000/api/opportunities/matches?user_id=user-001&type=scholarship"
+      const data = await apiFetch<{ matches?: Array<Record<string, unknown>> }>(
+        "/api/opportunities/matches",
+        { params: { user_id: "user-001", type: "scholarship" } }
       );
-      if (!res.ok) throw new Error("Failed");
-      const data = await res.json();
-      setOpportunities(
-        data.matches.map((m: Record<string, unknown>) => ({
-          id: m.opportunity_id as string,
-          title: m.title as string,
-          provider: m.provider as string,
-          type: "scholarship",
-          deadline: (m.deadline as string) || "TBD",
-          award_range: (m.award_range as string) || "",
-        }))
-      );
+      if (data?.matches) {
+        setOpportunities(
+          data.matches.map((m) => ({
+            id: m.opportunity_id as string,
+            title: m.title as string,
+            provider: m.provider as string,
+            type: "scholarship",
+            deadline: (m.deadline as string) || "TBD",
+            award_range: (m.award_range as string) || "",
+          }))
+        );
+      }
     } catch {
       setOpportunities([]);
     } finally {
@@ -83,6 +88,7 @@ export default function ScholarshipsBrainstormPage() {
     setGenerating(true);
     setConcepts([]);
     setStreamingConceptIdx(-1);
+    setError(null);
 
     try {
       const res = await fetch("http://localhost:8000/api/ai/brainstorm/opportunity", {
@@ -94,7 +100,10 @@ export default function ScholarshipsBrainstormPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.detail || "Generation failed");
+      }
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No stream");
 
@@ -147,8 +156,8 @@ export default function ScholarshipsBrainstormPage() {
       }
 
       setConcepts([...newConcepts]);
-    } catch {
-      // handle error
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Generation failed. Please try again.");
     } finally {
       setGenerating(false);
     }
@@ -158,6 +167,7 @@ export default function ScholarshipsBrainstormPage() {
     if (!freeformIdea.trim()) return;
     setGenerating(true);
     setBlueprint({});
+    setError(null);
 
     try {
       const res = await fetch("http://localhost:8000/api/ai/brainstorm/freeform", {
@@ -169,7 +179,10 @@ export default function ScholarshipsBrainstormPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.detail || "Generation failed");
+      }
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No stream");
 
@@ -206,8 +219,8 @@ export default function ScholarshipsBrainstormPage() {
       }
 
       setBlueprint({ ...bp });
-    } catch {
-      // handle error
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Generation failed. Please try again.");
     } finally {
       setGenerating(false);
     }
@@ -321,9 +334,104 @@ export default function ScholarshipsBrainstormPage() {
         </button>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          {error}
+          <button onClick={() => setError(null)} className="ml-2 text-red-500 hover:text-red-700 font-medium">
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* SCHOLARSHIP MODE */}
       {mode === "scholarship" && (
         <div className="space-y-6">
+          {/* Scholarship Name Search */}
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-2">
+              Search by Scholarship Name
+            </h2>
+            <p className="text-sm text-slate-500 mb-4">
+              Enter a scholarship name to get structured information and suggestions.
+            </p>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={scholarshipName}
+                onChange={(e) => setScholarshipName(e.target.value)}
+                placeholder="e.g., Fulbright, Rhodes, Gates Cambridge..."
+                className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    // Parse by name
+                    (async () => {
+                      if (!scholarshipName.trim()) return;
+                      setGenerating(true);
+                      setError(null);
+                      setParsedOpp(null);
+                      try {
+                        const res = await fetch("http://localhost:8000/api/opportunities/parse-external", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ name: scholarshipName, type: "scholarship" }),
+                        });
+                        if (!res.ok) throw new Error("Failed to find scholarship");
+                        const data = await res.json();
+                        setParsedOpp(data);
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : "Search failed.");
+                      } finally {
+                        setGenerating(false);
+                      }
+                    })();
+                  }
+                }}
+              />
+              <button
+                onClick={async () => {
+                  if (!scholarshipName.trim()) return;
+                  setGenerating(true);
+                  setError(null);
+                  setParsedOpp(null);
+                  try {
+                    const res = await fetch("http://localhost:8000/api/opportunities/parse-external", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ name: scholarshipName, type: "scholarship" }),
+                    });
+                    if (!res.ok) throw new Error("Failed to find scholarship");
+                    const data = await res.json();
+                    setParsedOpp(data);
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Search failed.");
+                  } finally {
+                    setGenerating(false);
+                  }
+                }}
+                disabled={generating || !scholarshipName.trim()}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors"
+              >
+                {generating ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                Search
+              </button>
+            </div>
+
+            {parsedOpp && (
+              <div className="mt-4 p-4 bg-violet-50 border border-violet-200 rounded-xl">
+                <div className="font-medium text-slate-900">{String(parsedOpp.title || "")}</div>
+                <div className="text-sm text-slate-600 mt-1">
+                  {parsedOpp.provider ? `${parsedOpp.provider} · ` : ""}
+                  {parsedOpp.award_range ? `${parsedOpp.award_range} · ` : ""}
+                  {parsedOpp.deadline ? `Due ${parsedOpp.deadline}` : ""}
+                </div>
+                {parsedOpp.description ? (
+                  <p className="text-sm text-slate-600 mt-2">{String(parsedOpp.description)}</p>
+                ) : null}
+              </div>
+            )}
+          </div>
+
           {!selectedOpp ? (
             <div className="bg-white rounded-xl border border-slate-200 p-6">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">

@@ -127,18 +127,22 @@ export default function MyPrivateGrantsPage() {
       setImporting(true);
       setError("");
       const parsed = await parseExternalUrl(importUrl.trim(), "grant");
-      if (parsed.title) setTitle(parsed.title);
-      if (parsed.provider) setProvider(parsed.provider);
-      if (parsed.description) setDescription(parsed.description);
-      if (parsed.deadline) setDeadline(parsed.deadline);
-      if (parsed.award_range) setAwardRange(parsed.award_range);
-      if (parsed.field_tags) setFieldTags(parsed.field_tags.join(", "));
-      if (parsed.region) setRegion(parsed.region);
-      if (parsed.source_url) setSourceUrl(parsed.source_url);
-      if (parsed.eligibility_criteria) {
-        setEligibility(JSON.stringify(parsed.eligibility_criteria, null, 2));
+      if (parsed) {
+        if (parsed.title) setTitle(parsed.title);
+        if (parsed.provider) setProvider(parsed.provider);
+        if (parsed.description) setDescription(parsed.description);
+        if (parsed.deadline) setDeadline(parsed.deadline);
+        if (parsed.award_range) setAwardRange(parsed.award_range);
+        if (parsed.field_tags) setFieldTags(parsed.field_tags.join(", "));
+        if (parsed.region) setRegion(parsed.region);
+        if (parsed.source_url) setSourceUrl(parsed.source_url);
+        if (parsed.eligibility_criteria) {
+          setEligibility(JSON.stringify(parsed.eligibility_criteria, null, 2));
+        }
+        setActiveTab("manual");
+      } else {
+        setError("Failed to parse URL. You can fill in details manually.");
       }
-      setActiveTab("manual");
     } catch {
       setError("Failed to parse URL. You can fill in details manually.");
     } finally {
@@ -163,9 +167,14 @@ export default function MyPrivateGrantsPage() {
     try {
       setSubmitting(true);
       const app = await createApplicationFromOpportunity(opp.id, "grant");
-      router.push(`/grants/applications/${app.id}`);
+      if (app) {
+        router.push(`/grants/applications/${app.id}`);
+      } else {
+        setError("Failed to create application");
+      }
     } catch {
       setError("Failed to create application");
+    } finally {
       setSubmitting(false);
     }
   };

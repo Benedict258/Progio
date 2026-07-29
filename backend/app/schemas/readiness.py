@@ -40,3 +40,26 @@ class AssessmentResultSummary(BaseModel):
     completed_at: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+class FitCriterion(BaseModel):
+    name: str
+    required: str | None = None
+    user_value: str | None = None
+    met: bool
+    partial: bool = False
+
+
+class OpportunityFitResponse(BaseModel):
+    user_id: str
+    opportunity_id: str
+    opportunity_title: str
+    opportunity_provider: str
+    opportunity_type: str | None = None
+    award_range: str | None = None
+    deadline: str | None = None
+    region: str | None = None
+    field_tags: list[str] | None = None
+    fit_score: float
+    criteria: list[FitCriterion]
+    recommendations: list[str]

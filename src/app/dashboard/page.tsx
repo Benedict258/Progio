@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GatedContent } from "@/components/GatedContent";
+import { apiFetch, apiFetchArray, apiPost } from "@/lib/api";
 const mockUser = {
   id: "user-001",
   name: "Dr. Amara Osei",
@@ -75,8 +76,6 @@ interface ReadinessAssessment {
   completed: boolean;
   score?: number;
 }
-
-const API_BASE = "http://localhost:8000";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -844,9 +843,7 @@ export default function DashboardPage() {
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [readiness, setReadiness] = useState<ReadinessAssessment[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingMatches, setLoadingMatches] = useState(true);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingReadiness, setLoadingReadiness] = useState(true);
@@ -855,22 +852,26 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const res = await fetch(`${API_BASE}/api/profile?user_id=user-001`);
-        if (!res.ok) throw new Error("Failed to fetch profile");
-        const data = await res.json();
-        setUser((prev) => ({
-          ...prev,
-          name: data.name || prev.name,
-          fullName: data.name || prev.fullName,
-          email: data.email || prev.email,
-          institution: data.institution || prev.institution,
-          field: data.field_of_study || prev.field,
-        }));
-        setProfilePct(data.profile_completion_pct ?? 0);
+        const data = await apiFetch<{
+          name?: string;
+          email?: string;
+          institution?: string;
+          field_of_study?: string;
+          profile_completion_pct?: number;
+        }>("/api/profile", { params: { user_id: "user-001" } });
+        if (data) {
+          setUser((prev) => ({
+            ...prev,
+            name: data.name || prev.name,
+            fullName: data.name || prev.fullName,
+            email: data.email || prev.email,
+            institution: data.institution || prev.institution,
+            field: data.field_of_study || prev.field,
+          }));
+          setProfilePct(data.profile_completion_pct ?? 0);
+        }
       } catch {
         // keep default state
-      } finally {
-        setLoadingProfile(false);
       }
     }
     fetchProfile();
@@ -880,15 +881,14 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchMatches() {
       try {
-        const [grantRes, scholarshipRes] = await Promise.all([
-          fetch(`${API_BASE}/api/opportunities/matches-enriched?user_id=user-001&type=grant`),
-          fetch(`${API_BASE}/api/opportunities/matches-enriched?user_id=user-001&type=scholarship`),
+        const [grantData, scholarshipData] = await Promise.all([
+          apiFetch<{ matches?: Array<{ opportunity_id: string; title: string; provider: string; score: number; match_reasons: string[]; award_range?: string; deadline?: string }> }>("/api/opportunities/matches-enriched", { params: { user_id: "user-001", type: "grant" } }),
+          apiFetch<{ matches?: Array<{ opportunity_id: string; title: string; provider: string; score: number; match_reasons: string[]; award_range?: string; deadline?: string }> }>("/api/opportunities/matches-enriched", { params: { user_id: "user-001", type: "scholarship" } }),
         ]);
 
-        if (grantRes.ok) {
-          const grantData = await grantRes.json();
-          const mappedGrants: MatchOpportunity[] = (grantData.matches || []).map(
-            (m: { opportunity_id: string; title: string; provider: string; score: number; match_reasons: string[]; award_range?: string; deadline?: string }) => ({
+        if (grantData?.matches) {
+          const mappedGrants: MatchOpportunity[] = grantData.matches.map(
+            (m) => ({
               id: m.opportunity_id,
               title: m.title,
               provider: m.provider,
@@ -902,10 +902,9 @@ export default function DashboardPage() {
           setGrants(mappedGrants);
         }
 
-        if (scholarshipRes.ok) {
-          const scholarshipData = await scholarshipRes.json();
-          const mappedScholarships: MatchOpportunity[] = (scholarshipData.matches || []).map(
-            (m: { opportunity_id: string; title: string; provider: string; score: number; match_reasons: string[]; award_range?: string; deadline?: string }) => ({
+        if (scholarshipData?.matches) {
+          const mappedScholarships: MatchOpportunity[] = scholarshipData.matches.map(
+            (m) => ({
               id: m.opportunity_id,
               title: m.title,
               provider: m.provider,
@@ -921,18 +920,18 @@ export default function DashboardPage() {
 
         // Derive deadlines from both grant and scholarship matches
         const allMatches = [
-          ...(grantRes.ok ? (await grantRes.json()).matches || [] : []),
-          ...(scholarshipRes.ok ? (await scholarshipRes.json()).matches || [] : []),
+          ...(grantData?.matches || []),
+          ...(scholarshipData?.matches || []),
         ];
         const derivedDeadlines: Deadline[] = allMatches
-          .filter((m: { deadline?: string }) => m.deadline)
-          .map((m: { opportunity_id: string; title: string; provider: string; deadline: string; type?: string }) => ({
+          .filter((m) => m.deadline)
+          .map((m) => ({
             id: m.opportunity_id,
             title: m.title,
             provider: m.provider,
-            track: (m.type || (m.opportunity_id.startsWith("opp-g") ? "grant" : "scholarship")) as "grant" | "scholarship",
-            deadline: m.deadline,
-            daysRemaining: daysUntil(m.deadline),
+            track: (m.opportunity_id.startsWith("opp-g") ? "grant" : "scholarship") as "grant" | "scholarship",
+            deadline: m.deadline!,
+            daysRemaining: daysUntil(m.deadline!),
             applicationStatus: "not_started" as const,
           }))
           .sort((a: Deadline, b: Deadline) => a.daysRemaining - b.daysRemaining);
@@ -950,10 +949,14 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const res = await fetch(`${API_BASE}/api/projects?user_id=user-001`);
-        if (!res.ok) throw new Error("Failed to fetch projects");
-        const data = await res.json();
-        const mapped = (data || []).map((p: { id: string; status: string; source_application_id?: string; progress_pct?: number; updated_at?: string }) => ({
+        const data = await apiFetchArray<{
+          id: string;
+          status: string;
+          source_application_id?: string;
+          progress_pct?: number;
+          updated_at?: string;
+        }>("/api/projects", { params: { user_id: "user-001" } });
+        const mapped = data.map((p) => ({
           id: p.id,
           opportunityTitle: p.source_application_id || "Untitled Project",
           track: "grant" as const,
@@ -975,9 +978,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchReadiness() {
       try {
-        const res = await fetch(`${API_BASE}/api/readiness/results/user-001`);
-        if (!res.ok) throw new Error("Failed to fetch readiness");
-        const data = await res.json();
+        const data = await apiFetch<Array<{ track: string; score: number }>>("/api/readiness/results/user-001");
         if (Array.isArray(data) && data.length > 0) {
           const trackLabels: Record<string, string> = {
             grant: "Grant Readiness",
@@ -985,7 +986,7 @@ export default function DashboardPage() {
             research: "Research Readiness",
           };
           const completedTracks = new Map(
-            data.map((r: { track: string; score: number }) => [r.track, r.score])
+            data.map((r) => [r.track, r.score])
           );
           const mapped: ReadinessAssessment[] = ["grant", "scholarship", "research"].map((track) => ({
             id: `r-${track}`,
@@ -1008,18 +1009,13 @@ export default function DashboardPage() {
   const handleStartApplication = async (id: string, track: "grant" | "scholarship") => {
     setCreating(id);
     try {
-      const res = await fetch(`${API_BASE}/api/applications`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: "user-001",
-          opportunity_id: id,
-          type: track,
-        }),
+      const data = await apiPost<{ id: string }>("/api/applications", {
+        user_id: "user-001",
+        opportunity_id: id,
+        type: track,
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      if (data) {
         router.push(`/${track === "grant" ? "grants" : "scholarships"}/applications/${data.id}`);
       } else {
         const app = `app-${Date.now()}`;

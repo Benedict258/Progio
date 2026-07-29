@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { toggleScholarshipSaved, isScholarshipSaved, getSavedScholarships } from "@/lib/storage";
 import { GatedContent } from "@/components/GatedContent";
+import { apiFetch, apiPost } from "@/lib/api";
 
 function OpportunityCard({
   opportunity,
@@ -127,24 +128,25 @@ export default function AllScholarshipsPage() {
   useEffect(() => {
     async function fetchScholarships() {
       try {
-        const res = await fetch(
-          "http://localhost:8000/api/opportunities/matches?user_id=user-001&type=scholarship"
+        const data = await apiFetch<{ matches?: Array<Record<string, unknown>> }>(
+          "/api/opportunities/matches",
+          { params: { user_id: "user-001", type: "scholarship" } }
         );
-        if (!res.ok) throw new Error("API error");
-        const data = await res.json();
-        const mapped: ScholarshipOpportunity[] = data.matches.map(
-          (m: Record<string, unknown>) => ({
-            id: m.opportunity_id as string,
-            title: m.title as string,
-            provider: m.provider as string,
-            matchScore: Math.round(m.score as number),
-            deadline: m.deadline as string,
-            matchReasons: m.match_reasons as string[],
-            track: "scholarship" as const,
-            amount: (m.award_range as string) || undefined,
-          })
-        );
-        setScholarships(mapped);
+        if (data?.matches) {
+          const mapped: ScholarshipOpportunity[] = data.matches.map(
+            (m) => ({
+              id: m.opportunity_id as string,
+              title: m.title as string,
+              provider: m.provider as string,
+              matchScore: Math.round(m.score as number),
+              deadline: m.deadline as string,
+              matchReasons: m.match_reasons as string[],
+              track: "scholarship" as const,
+              amount: (m.award_range as string) || undefined,
+            })
+          );
+          setScholarships(mapped);
+        }
       } catch {
         setScholarships([]);
       } finally {
@@ -166,18 +168,13 @@ export default function AllScholarshipsPage() {
   const handleStartApplication = async (opportunityId: string) => {
     setCreating(opportunityId);
     try {
-      const res = await fetch("/api/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: "user-001",
-          opportunity_id: opportunityId,
-          type: "scholarship",
-        }),
+      const data = await apiPost<{ id: string }>("/api/applications", {
+        user_id: "user-001",
+        opportunity_id: opportunityId,
+        type: "scholarship",
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      if (data) {
         router.push(`/scholarships/applications/${data.id}`);
       } else {
         const app = `app-${Date.now()}`;

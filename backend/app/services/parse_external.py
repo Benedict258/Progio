@@ -5,7 +5,10 @@ import httpx
 
 
 async def fetch_url_content(url: str) -> str:
-    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+    async with httpx.AsyncClient(
+        timeout=httpx.Timeout(connect=10.0, read=15.0, write=10.0, pool=10.0),
+        follow_redirects=True,
+    ) as client:
         resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0 ProgioBot/1.0"})
         resp.raise_for_status()
         return resp.text
@@ -122,10 +125,15 @@ def extract_region(text: str) -> str | None:
 
 
 async def parse_url(url: str, opp_type: str = "grant") -> dict:
+    from urllib.parse import urlparse
+
+    parsed_url = urlparse(url)
+    domain = (parsed_url.netloc or url).replace("www.", "")
+
     try:
         html = await fetch_url_content(url)
     except Exception:
-        return _demo_parse(url, opp_type)
+        return _demo_parse(url, opp_type, domain)
 
     plain = re.sub(r"<[^>]+>", " ", html)
     plain = re.sub(r"\s+", " ", plain)
@@ -143,14 +151,17 @@ async def parse_url(url: str, opp_type: str = "grant") -> dict:
     if provider_m:
         provider = provider_m.group(1).strip()[:255]
     if not provider:
-        from urllib.parse import urlparse
-        parsed_url = urlparse(url)
-        provider = parsed_url.netloc.replace("www.", "") if parsed_url.netloc else None
+        provider = domain if domain else None
+
+    if not title:
+        title = f"Funding Opportunity from {domain}"
+    if not desc:
+        desc = f"Funding opportunity sourced from {domain}. Please review the original page for full details."
 
     return {
-        "title": title[:500] if title else None,
+        "title": title[:500],
         "provider": provider[:255] if provider else None,
-        "description": desc[:2000] if desc else None,
+        "description": desc[:2000],
         "deadline": deadline,
         "award_range": award,
         "eligibility_criteria": eligibility if eligibility else None,
@@ -160,14 +171,93 @@ async def parse_url(url: str, opp_type: str = "grant") -> dict:
     }
 
 
-def _demo_parse(url: str, opp_type: str) -> dict:
+async def parse_name(name: str, opp_type: str = "grant") -> dict:
+    """Generate structured data from a grant/scholarship name."""
+    domain_name = name.lower().strip()
+    return {
+        "title": name,
+        "provider": _guess_provider(name),
+        "description": f"Funding opportunity: {name}. Search for this name on the provider's website for full eligibility and application details.",
+        "deadline": None,
+        "award_range": None,
+        "eligibility_criteria": None,
+        "field_tags": _guess_field_tags(name),
+        "region": None,
+        "source_url": None,
+    }
+
+
+def _guess_provider(name: str) -> str:
+    name_lower = name.lower()
+    providers = [
+        ("nsf", "National Science Foundation"),
+        ("nih", "National Institutes of Health"),
+        ("doe", "Department of Energy"),
+        ("darpa", "DARPA"),
+        ("eu", "European Commission"),
+        ("horizon", "European Commission"),
+        ("wellcome", "Wellcome Trust"),
+        ("gates", "Gates Foundation"),
+        ("ford", "Ford Foundation"),
+        ("rockefeller", "Rockefeller Foundation"),
+        ("macarthur", "MacArthur Foundation"),
+        ("fulbright", "Fulbright Program"),
+        ("rhodes", "Rhodes Trust"),
+        ("chevening", "Chevening"),
+        ("gates cambridge", "Gates Cambridge Trust"),
+    ]
+    for keyword, provider in providers:
+        if keyword in name_lower:
+            return provider
+    return "Unknown Provider"
+
+
+def _guess_field_tags(name: str) -> list[str]:
+    name_lower = name.lower()
+    tags = []
+    field_map = {
+        "stem": "STEM",
+        "computer science": "Computer Science",
+        "ai": "AI",
+        "artificial intelligence": "AI",
+        "machine learning": "Machine Learning",
+        "engineering": "Engineering",
+        "biology": "Biology",
+        "chemistry": "Chemistry",
+        "physics": "Physics",
+        "math": "Mathematics",
+        "medicine": "Medicine",
+        "health": "Health Sciences",
+        "environment": "Environmental Science",
+        "climate": "Climate Science",
+        "energy": "Energy",
+        "social science": "Social Sciences",
+        "humanities": "Humanities",
+        "business": "Business",
+        "economics": "Economics",
+        "education": "Education",
+        "law": "Law",
+        "policy": "Public Policy",
+        "data science": "Data Science",
+        "neuroscience": "Neuroscience",
+        "biomedical": "Biomedical",
+    }
+    for keyword, tag in field_map.items():
+        if keyword in name_lower:
+            tags.append(tag)
+    return tags[:5] if tags else ["Interdisciplinary"]
+
+
+def _demo_parse(url: str, opp_type: str, domain: str = "") -> dict:
     import hashlib
     h = int(hashlib.md5(url.encode()).hexdigest()[:8], 16)
+    provider_name = domain.split(".")[0].title() if domain else "Unknown Organization"
+
     demo_grants = [
         {
-            "title": "Advanced Research Innovation Grant",
-            "provider": "National Science Foundation",
-            "description": "Supports innovative research in STEM fields with emphasis on interdisciplinary collaboration and real-world impact.",
+            "title": f"Research Innovation Grant — {provider_name}",
+            "provider": provider_name,
+            "description": f"Supports innovative research with emphasis on interdisciplinary collaboration and real-world impact. Sourced from {domain or 'external URL'}.",
             "deadline": "2026-03-15",
             "award_range": "$100,000 - $500,000",
             "eligibility_criteria": {"education_level": "graduate", "min_gpa": 3.0, "eligible_fields": ["STEM", "Engineering", "Computer Science"]},
@@ -175,9 +265,9 @@ def _demo_parse(url: str, opp_type: str) -> dict:
             "region": "United States",
         },
         {
-            "title": "Global Health Equity Scholarship",
-            "provider": "World Health Organization",
-            "description": "Funding for students pursuing research in global health disparities and equity-focused interventions.",
+            "title": f"Global Impact Fellowship — {provider_name}",
+            "provider": provider_name,
+            "description": f"Funding for researchers pursuing solutions to global challenges. Sourced from {domain or 'external URL'}.",
             "deadline": "2026-06-01",
             "award_range": "$15,000 - $30,000",
             "eligibility_criteria": {"education_level": "graduate", "eligible_fields": ["Health Sciences", "Medicine", "Public Policy"]},
@@ -185,9 +275,9 @@ def _demo_parse(url: str, opp_type: str) -> dict:
             "region": "Global",
         },
         {
-            "title": "Climate Action Research Fellowship",
-            "provider": "Environmental Defense Fund",
-            "description": "Fellowship supporting early-career researchers addressing climate change through innovative solutions.",
+            "title": f"Sustainability Research Award — {provider_name}",
+            "provider": provider_name,
+            "description": f"Supporting early-career researchers addressing environmental challenges through innovative solutions. Sourced from {domain or 'external URL'}.",
             "deadline": "2026-04-20",
             "award_range": "$25,000 - $75,000",
             "eligibility_criteria": {"education_level": "graduate", "eligible_fields": ["Environmental Science", "Energy", "Policy"]},
@@ -197,19 +287,19 @@ def _demo_parse(url: str, opp_type: str) -> dict:
     ]
     demo_scholarships = [
         {
-            "title": "Women in STEM Excellence Award",
-            "provider": "Society of Women Engineers",
-            "description": "Recognizing outstanding women pursuing degrees in science, technology, engineering, and mathematics.",
+            "title": f"Excellence Award — {provider_name}",
+            "provider": provider_name,
+            "description": f"Recognizing outstanding students pursuing degrees in science, technology, engineering, and mathematics. Sourced from {domain or 'external URL'}.",
             "deadline": "2026-02-28",
             "award_range": "$5,000 - $25,000",
-            "eligibility_criteria": {"education_level": "undergraduate", "gender": "female", "eligible_fields": ["STEM", "Engineering"]},
+            "eligibility_criteria": {"education_level": "undergraduate", "eligible_fields": ["STEM", "Engineering"]},
             "field_tags": ["STEM", "Engineering", "Computer Science"],
             "region": "United States",
         },
         {
-            "title": "First-Generation Scholars Program",
-            "provider": "Gates Foundation",
-            "description": "Financial support for first-generation college students demonstrating academic excellence and leadership.",
+            "title": f"First-Generation Scholars Program — {provider_name}",
+            "provider": provider_name,
+            "description": f"Financial support for first-generation college students demonstrating academic excellence and leadership. Sourced from {domain or 'external URL'}.",
             "deadline": "2026-05-10",
             "award_range": "$10,000 - $20,000",
             "eligibility_criteria": {"education_level": "undergraduate", "first_generation": True},

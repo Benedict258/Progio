@@ -13,7 +13,7 @@ from app.schemas.private_opportunity import (
     PrivateOpportunityResponse,
     PrivateOpportunityUpdate,
 )
-from app.services.parse_external import parse_url
+from app.services.parse_external import parse_name, parse_url
 
 router = APIRouter(prefix="/api/opportunities/private", tags=["private-opportunities"])
 
@@ -44,18 +44,25 @@ async def create_private_opportunity(
     payload: PrivateOpportunityCreate,
     db: AsyncSession = Depends(get_db),
 ):
+    if not payload.title or not payload.title.strip():
+        raise HTTPException(status_code=422, detail="Title is required")
+    if not payload.provider or not payload.provider.strip():
+        raise HTTPException(status_code=422, detail="Provider is required")
+    if payload.type not in ("grant", "scholarship"):
+        raise HTTPException(status_code=422, detail="Type must be 'grant' or 'scholarship'")
+
     deadline_date = None
     if payload.deadline:
         try:
             deadline_date = date.fromisoformat(payload.deadline)
         except ValueError:
-            pass
+            raise HTTPException(status_code=422, detail="Invalid deadline format. Use YYYY-MM-DD")
 
     opp = PrivateOpportunity(
         user_id=payload.user_id,
         type=payload.type,
-        title=payload.title,
-        provider=payload.provider,
+        title=payload.title.strip(),
+        provider=payload.provider.strip(),
         description=payload.description,
         eligibility_criteria=payload.eligibility_criteria,
         award_range=payload.award_range,
@@ -144,7 +151,11 @@ async def parse_external_opportunity(
     payload: ParseExternalRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    if not payload.url:
-        raise HTTPException(status_code=400, detail="URL is required")
-    result = await parse_url(payload.url, payload.type)
+    if not payload.url and not payload.name:
+        raise HTTPException(status_code=400, detail="URL or name is required")
+
+    if payload.name and not payload.url:
+        result = await parse_name(payload.name, payload.type)
+    else:
+        result = await parse_url(payload.url, payload.type)
     return ParseExternalResponse(**result)

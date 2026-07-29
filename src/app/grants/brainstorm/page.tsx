@@ -15,6 +15,7 @@ import {
   BarChart3,
   ChevronDown,
 } from "lucide-react";
+import { apiFetch, apiPost } from "@/lib/api";
 
 interface Concept {
   title: string;
@@ -50,27 +51,31 @@ export default function GrantsBrainstormPage() {
   const [blueprint, setBlueprint] = useState<Record<string, string>>({});
   const [streamingField, setStreamingField] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [grantName, setGrantName] = useState("");
+  const [parsedOpp, setParsedOpp] = useState<Record<string, unknown> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const fetchOpportunities = useCallback(async () => {
     setLoadingOpps(true);
     try {
-      const res = await fetch(
-        "http://localhost:8000/api/opportunities/matches?user_id=user-001&type=grant"
+      const data = await apiFetch<{ matches?: Array<Record<string, unknown>> }>(
+        "/api/opportunities/matches",
+        { params: { user_id: "user-001", type: "grant" } }
       );
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      setOpportunities(
-        data.matches.map((m: Record<string, unknown>) => ({
-          id: m.opportunity_id as string,
-          title: m.title as string,
-          provider: m.provider as string,
-          type: "grant",
-          deadline: (m.deadline as string) || "TBD",
-          award_range: (m.award_range as string) || "",
-          field_tags: [],
-        }))
-      );
+      if (data?.matches) {
+        setOpportunities(
+          data.matches.map((m) => ({
+            id: m.opportunity_id as string,
+            title: m.title as string,
+            provider: m.provider as string,
+            type: "grant",
+            deadline: (m.deadline as string) || "TBD",
+            award_range: (m.award_range as string) || "",
+            field_tags: [],
+          }))
+        );
+      }
     } catch {
       setOpportunities([]);
     } finally {
@@ -87,6 +92,7 @@ export default function GrantsBrainstormPage() {
     setGenerating(true);
     setConcepts([]);
     setStreamingConceptIdx(-1);
+    setError(null);
 
     try {
       const res = await fetch("http://localhost:8000/api/ai/brainstorm/opportunity", {
@@ -98,7 +104,10 @@ export default function GrantsBrainstormPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Generation failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.detail || "Generation failed");
+      }
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No stream");
 
@@ -151,8 +160,30 @@ export default function GrantsBrainstormPage() {
       }
 
       setConcepts([...newConcepts]);
-    } catch {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Generation failed. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleParseName = async () => {
+    if (!grantName.trim()) return;
+    setGenerating(true);
+    setError(null);
+    setParsedOpp(null);
+
+    try {
+      const res = await fetch("http://localhost:8000/api/opportunities/parse-external", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: grantName, type: "grant" }),
+      });
+      if (!res.ok) throw new Error("Failed to find opportunity");
+      const data = await res.json();
+      setParsedOpp(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Search failed. Please try again.");
     } finally {
       setGenerating(false);
     }
@@ -162,6 +193,7 @@ export default function GrantsBrainstormPage() {
     if (!freeformIdea.trim()) return;
     setGenerating(true);
     setBlueprint({});
+    setError(null);
 
     try {
       const res = await fetch("http://localhost:8000/api/ai/brainstorm/freeform", {
@@ -173,7 +205,10 @@ export default function GrantsBrainstormPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Generation failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.detail || "Generation failed");
+      }
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No stream");
 
@@ -210,8 +245,8 @@ export default function GrantsBrainstormPage() {
       }
 
       setBlueprint({ ...bp });
-    } catch {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Generation failed. Please try again.");
     } finally {
       setGenerating(false);
     }
@@ -325,9 +360,71 @@ export default function GrantsBrainstormPage() {
         </button>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          {error}
+          <button onClick={() => setError(null)} className="ml-2 text-red-500 hover:text-red-700 font-medium">
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* GRANT MODE */}
       {mode === "grant" && (
         <div className="space-y-6">
+          {/* Grant Name Search */}
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-2">
+              Search by Grant Name
+            </h2>
+            <p className="text-sm text-slate-500 mb-4">
+              Enter a grant or scholarship name to get structured information and suggestions.
+            </p>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={grantName}
+                onChange={(e) => setGrantName(e.target.value)}
+                placeholder="e.g., NSF CAREER Award, Fulbright Scholarship..."
+                className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onKeyDown={(e) => e.key === "Enter" && handleParseName()}
+              />
+              <button
+                onClick={handleParseName}
+                disabled={generating || !grantName.trim()}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              >
+                {generating ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                Search
+              </button>
+            </div>
+
+            {/* Parsed Result */}
+            {parsedOpp && (
+              <div className="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                <div className="font-medium text-slate-900">{String(parsedOpp.title || "")}</div>
+                <div className="text-sm text-slate-600 mt-1">
+                  {parsedOpp.provider ? `${parsedOpp.provider} · ` : ""}
+                  {parsedOpp.award_range ? `${parsedOpp.award_range} · ` : ""}
+                  {parsedOpp.deadline ? `Due ${parsedOpp.deadline}` : ""}
+                </div>
+                {parsedOpp.description ? (
+                  <p className="text-sm text-slate-600 mt-2">{String(parsedOpp.description)}</p>
+                ) : null}
+                {parsedOpp.field_tags ? (
+                  <div className="flex gap-2 mt-2">
+                    {(parsedOpp.field_tags as string[]).map((tag: string) => (
+                      <span key={tag} className="text-xs bg-white border border-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+
           {!selectedOpp ? (
             <div className="bg-white rounded-xl border border-slate-200 p-6">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">
