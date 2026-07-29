@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Projects - ScholarAI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #E2E8F0;
+            border-radius: 10px;
+        }
+        .project-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
+            transform: translateY(-2px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "background-card": "#FFFFFF",
+                        "warning": "#F59E0B",
+                        "tertiary-fixed": "#ffdcc5",
+                        "on-tertiary-fixed": "#301400",
+                        "on-primary-fixed": "#07006c",
+                        "primary-container": "#6063ee",
+                        "on-tertiary-fixed-variant": "#703700",
+                        "surface": "#faf8ff",
+                        "danger": "#EF4444",
+                        "secondary-fixed": "#6ffbbe",
+                        "text-primary": "#0F172A",
+                        "surface-container-high": "#e2e7ff",
+                        "inverse-primary": "#c0c1ff",
+                        "on-secondary-fixed": "#002113",
+                        "secondary-container": "#6cf8bb",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#eef0ff",
+                        "tertiary": "#904900",
+                        "surface-dim": "#d2d9f4",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "tertiary-container": "#b55d00",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#faf8ff",
+                        "on-surface": "#131b2e",
+                        "surface-container-low": "#f2f3ff",
+                        "on-primary": "#ffffff",
+                        "secondary": "#006c49",
+                        "surface-tint": "#494bd6",
+                        "text-secondary": "#64748B",
+                        "background": "#faf8ff",
+                        "secondary-fixed-dim": "#4edea3",
+                        "primary-fixed": "#e1e0ff",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "surface-container-highest": "#dae2fd",
+                        "outline": "#767586",
+                        "on-background": "#131b2e",
+                        "on-surface-variant": "#464554",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#fffbff",
+                        "surface-container": "#eaedff",
+                        "border-subtle": "#E2E8F0",
+                        "inverse-surface": "#283044",
+                        "error-container": "#ffdad6",
+                        "outline-variant": "#c7c4d7",
+                        "on-tertiary-container": "#fffbff",
+                        "surface-variant": "#dae2fd",
+                        "primary": "#4648d4",
+                        "on-secondary-container": "#00714d",
+                        "background-main": "#F8FAFC",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#005236"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "16px",
+                        "gutter": "24px",
+                        "sidebar-width": "256px",
+                        "margin-mobile": "16px",
+                        "container-max": "1440px",
+                        "stack-sm": "8px",
+                        "stack-lg": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-main min-h-screen text-on-surface">
+<!-- Side Navigation Shell -->
+<aside class="fixed left-0 top-0 h-full w-[256px] bg-inverse-surface flex flex-col py-stack-lg z-50">
+<div class="px-6 mb-stack-lg">
+<h1 class="text-headline-md font-bold text-surface-bright tracking-tight">Scholar Workspace</h1>
+<p class="text-label-md text-outline-variant mt-1">Academic Research Portal</p>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 text-label-md transition-colors text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 rounded-lg" href="#">
+<span class="material-symbols-outlined">payments</span> Grants
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-label-md transition-colors text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 rounded-lg" href="#">
+<span class="material-symbols-outlined">school</span> Scholarships
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-label-md transition-colors text-outline-variant hover:text-surface-bright hover:bg-surface-container-highest/10 rounded-lg" href="#">
+<span class="material-symbols-outlined">science</span> Research
+            </a>
+<!-- Active Tab: Projects -->
+<a class="flex items-center gap-3 px-4 py-3 text-label-md bg-primary text-on-primary font-bold border-l-4 border-primary-fixed-dim rounded-r-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_tree</span> Projects
+            </a>
+</nav>
+<div class="mt-auto px-4 space-y-2 pt-stack-lg border-t border-surface-variant/10">
+<button class="w-full bg-primary-container text-on-primary-container py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 mb-4 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined">add</span> New Project
+            </button>
+<a class="flex items-center gap-3 px-4 py-3 text-label-md text-outline-variant hover:text-surface-bright transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span> Settings
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-label-md text-outline-variant hover:text-surface-bright transition-colors" href="#">
+<span class="material-symbols-outlined">help</span> Support
+            </a>
+</div>
+</aside>
+<!-- Main Content Stage -->
+<main class="ml-[256px] min-h-screen flex flex-col">
+<!-- Top App Bar -->
+<header class="flex justify-between items-center h-16 px-gutter bg-surface border-b border-border-subtle sticky top-0 z-40">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-body-md focus:ring-2 focus:ring-primary" placeholder="Search research projects..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-danger rounded-full"></span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">history</span>
+</button>
+<div class="h-8 w-px bg-border-subtle mx-2"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="text-right">
+<p class="text-label-md font-bold text-text-primary">Dr. Julian Vance</p>
+<p class="text-[10px] text-text-secondary uppercase tracking-widest">Lead Investigator</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary-fixed-dim object-cover" data-alt="A professional studio portrait of a male researcher in his 40s wearing a charcoal blazer, against a clean clinical white background. The lighting is soft and even, creating a scholarly and trustworthy atmosphere consistent with a high-end corporate academic portal. High contrast and minimalist composition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAD-a3_i8WORWqeQDVxP0lpEU3XkAw9cx01GiLS4PQKzJb_I9DqoGXwdJTIFEgD6b6H6wraIdp6lkWuZBmnuEB35-yGeq48mq53agoyN2PhflzHVf1YC8vwKppvf67-PP7-_ZvNepVj7SyFy2JGqTaWKt-wymrFfMFAyse9-THvF-8vMUkiMC4oC_qWleV3WJNBdLLWSyH70FHZBM4Dfi-tLALcswA2hV0ZWrUQyvm_WJW5Dk0zl-tV"/>
+</div>
+</div>
+</header>
+<!-- Canvas Area -->
+<div class="p-gutter max-w-container-max w-full mx-auto">
+<div class="flex justify-between items-end mb-stack-lg">
+<div>
+<h2 class="text-headline-lg font-headline-lg text-text-primary">Active Projects</h2>
+<p class="text-body-md text-text-secondary mt-1">Manage and track your ongoing research initiatives.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-background-card border border-border-subtle rounded-lg text-label-md font-bold text-text-primary hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined text-[20px]">filter_list</span> Filter
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-background-card border border-border-subtle rounded-lg text-label-md font-bold text-text-primary hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined text-[20px]">sort</span> Sort
+                    </button>
+</div>
+</div>
+<!-- Bento/Grid Layout for Projects -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
+<!-- Featured Project Card: NIH R01 -->
+<div class="xl:col-span-8 bg-background-card border border-border-subtle rounded-xl p-8 project-card transition-all duration-300 flex flex-col md:flex-row gap-8 relative overflow-hidden">
+<!-- Subtle pattern overlay -->
+<div class="absolute top-0 right-0 w-32 h-32 opacity-[0.03] pointer-events-none">
+<svg class="w-full h-full fill-primary" viewbox="0 0 100 100">
+<circle cx="100" cy="0" r="100"></circle>
+</svg>
+</div>
+<div class="flex-1">
+<div class="flex items-start justify-between mb-6">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 bg-primary-fixed rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">strikethrough_s</span>
+</div>
+<div>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-label-sm font-bold bg-secondary-container text-on-secondary-container mb-1">
+                                        GRANT FUNDED
+                                    </span>
+<h3 class="text-headline-md font-headline-md text-text-primary">NIH R01 - Computational Genomics</h3>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="text-label-md font-bold text-text-secondary">Project Completion</span>
+<span class="text-label-md font-bold text-primary">40%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-3">
+<div class="bg-primary h-3 rounded-full transition-all duration-1000 ease-out" style="width: 40%"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 rounded-lg bg-surface-container-low">
+<p class="text-[10px] text-text-secondary uppercase tracking-widest font-bold mb-1">Grant ID</p>
+<p class="text-label-md font-bold text-text-primary">#NIH-2024-G901</p>
+</div>
+<div class="p-4 rounded-lg bg-surface-container-low">
+<p class="text-[10px] text-text-secondary uppercase tracking-widest font-bold mb-1">Next Deadline</p>
+<p class="text-label-md font-bold text-text-primary">Oct 12, 2024</p>
+</div>
+</div>
+<div class="flex gap-3 pt-4">
+<button class="flex-1 py-3 px-4 bg-primary text-on-primary rounded-lg font-bold text-label-md hover:brightness-110 transition-all active:scale-95">
+                                    View Details
+                                </button>
+<button class="flex-1 py-3 px-4 bg-background-card border border-primary text-primary rounded-lg font-bold text-label-md hover:bg-primary/5 transition-all">
+                                    Update Milestone
+                                </button>
+</div>
+</div>
+</div>
+<!-- Vertical Milestone Checklist -->
+<div class="w-full md:w-64 border-l border-border-subtle md:pl-8 flex flex-col">
+<h4 class="text-label-md font-bold text-text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">event_note</span> Project Timeline
+                        </h4>
+<div class="relative space-y-8 flex-1">
+<!-- Timeline line -->
+<div class="absolute left-4 top-2 bottom-2 w-0.5 bg-border-subtle"></div>
+<!-- Step 1: Completed -->
+<div class="relative flex items-center gap-4 group">
+<div class="z-10 w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-white ring-4 ring-background-card">
+<span class="material-symbols-outlined text-[16px] font-bold">check</span>
+</div>
+<div>
+<p class="text-label-md font-bold text-text-primary">Kickoff</p>
+<p class="text-label-sm text-secondary font-bold">Completed</p>
+</div>
+</div>
+<!-- Step 2: In Progress -->
+<div class="relative flex items-center gap-4">
+<div class="z-10 w-8 h-8 rounded-full bg-warning flex items-center justify-center text-white ring-4 ring-background-card">
+<span class="material-symbols-outlined text-[16px] font-bold animate-pulse">pending</span>
+</div>
+<div>
+<p class="text-label-md font-bold text-text-primary">Mid-term</p>
+<p class="text-label-sm text-warning font-bold">In Progress</p>
+</div>
+</div>
+<!-- Step 3: Pending -->
+<div class="relative flex items-center gap-4">
+<div class="z-10 w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline ring-4 ring-background-card">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+</div>
+<div>
+<p class="text-label-md font-bold text-text-secondary">Final Report</p>
+<p class="text-label-sm text-text-secondary">Pending</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Cards / Team Members -->
+<div class="xl:col-span-4 flex flex-col gap-gutter">
+<div class="bg-background-card border border-border-subtle rounded-xl p-6 flex-1 project-card transition-all">
+<h4 class="text-headline-sm font-headline-sm text-text-primary mb-4">Project Collaborators</h4>
+<div class="space-y-4 custom-scrollbar overflow-y-auto max-h-[300px]">
+<div class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Close up of a female scientist in her 30s with short hair, wearing blue scrubs and protective glasses, focused and looking slightly away. The background is a blurred high-tech lab with cool blue and sterile white lighting. Minimalist, professional style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCALDl8DwWcrf-1OvjLO2EQgoNq_XJKaRFHku_SDBgcLUyPI-fpcwHQxHVugotjiQ3_fDBpgoSx3iYJ58SwrdruP9T5YwP1OZf7ap0rvfpW7zOjYHpqXlQyRbLP4S6oNpGODYiGdjbkvkBguPc-R3GTCJ_c1YRv7av7xAHAaWi0pPhSmdTkNDPQCOJHeobgx7qAJ81Q0O8viZOh-HtITEJl2VGNs7fh94Q1S39CcG0jzDzECetiJW2a"/>
+<div class="flex-1">
+<p class="text-label-md font-bold text-text-primary">Dr. Elena Rossi</p>
+<p class="text-[10px] text-text-secondary">Lead Bioinformatics</p>
+</div>
+<span class="w-2 h-2 bg-secondary rounded-full"></span>
+</div>
+<div class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Portrait of a young male researcher with glasses and a button-up shirt, looking friendly. Clean corporate office setting background with soft natural morning light. Muted professional tones, high quality photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB17lC7ONT1yjYxDhGtpozIn3qjhgOl9XiTpIS_efYLUhGYuFiTy4ODiHqJNLXGwPCd7wjWVYXOkc-LDh566h-iDeT-m1w5Z47_2pSpFi9QgbLsNAkvjbcOHDPLAb0e4Od998Y_42CWVVxXspgxa7yPRob8lSSA-3sMXz-v5rz6XCx-B3kgRbqjDBgaj4sPaHuWfjjh-baWA9aZ1wBqGhyFBYmNRbpxeje2plScaMrlWwYCm49C56Zx"/>
+<div class="flex-1">
+<p class="text-label-md font-bold text-text-primary">Marcus Chen</p>
+<p class="text-[10px] text-text-secondary">Senior Data Analyst</p>
+</div>
+<span class="w-2 h-2 bg-outline-variant rounded-full"></span>
+</div>
+<div class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Middle-aged female academic professional with graying hair, wearing a white lab coat over a dark shirt. Professional environment, soft lighting, clean composition with neutral colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBhsOMlgA8yEmx9rjuLyC800hscquoc4aZpZMQOOFdZwmeU91pbnzyoxdljQZ6d1eJVH4d0HxvzMBVo_8icjbZ0zVJ92i53aPQosmAmxz-Ujc552-MsnZ4bM_8UupWy25jhI3diQsstIRZelk1Mfl4mXMDapo1iwDQtzCxBMNGHq151lo2zz-1TO57MZQS1Ceb5BFDFrm3afyW_inQOa90Nf7gKhnU0iz3nDxbZE4Anq0fcj0skPZi"/>
+<div class="flex-1">
+<p class="text-label-md font-bold text-text-primary">Sarah Miller</p>
+<p class="text-[10px] text-text-secondary">Project Coordinator</p>
+</div>
+<span class="w-2 h-2 bg-secondary rounded-full"></span>
+</div>
+</div>
+<button class="w-full mt-4 py-2 border border-border-subtle rounded-lg text-label-sm font-bold text-text-secondary hover:bg-surface-container-low transition-all">
+                            Manage Team
+                        </button>
+</div>
+<!-- Mini Insight/Metric -->
+<div class="bg-primary rounded-xl p-6 text-on-primary relative overflow-hidden">
+<div class="relative z-10">
+<p class="text-label-sm font-bold opacity-80 uppercase tracking-widest mb-1">Weekly Output</p>
+<p class="text-headline-md font-headline-md">+12.4%</p>
+<p class="text-[11px] opacity-70 mt-2">Analysis throughput increased compared to last session.</p>
+</div>
+<span class="material-symbols-outlined absolute -bottom-2 -right-2 text-[80px] opacity-10">trending_up</span>
+</div>
+</div>
+<!-- Secondary Projects List -->
+<div class="xl:col-span-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Project 2 -->
+<div class="bg-background-card border border-border-subtle rounded-xl p-6 project-card transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="w-10 h-10 bg-secondary-fixed rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-fixed">cloud_upload</span>
+</div>
+<span class="px-2 py-1 bg-surface-container-highest text-outline text-[10px] font-bold rounded">PLANNING</span>
+</div>
+<h4 class="text-headline-sm font-headline-sm text-text-primary mb-2">Protein Folding Dynamics</h4>
+<p class="text-body-md text-text-secondary mb-6 line-clamp-2">Investigation into non-equilibrium thermodynamics of synthetic protein chains.</p>
+<div class="flex justify-between items-center pt-4 border-t border-border-subtle">
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full bg-primary-fixed border-2 border-background-card"></div>
+<div class="w-7 h-7 rounded-full bg-secondary-fixed border-2 border-background-card"></div>
+</div>
+<button class="text-primary text-label-md font-bold hover:underline">View Phase 1</button>
+</div>
+</div>
+<!-- Project 3 -->
+<div class="bg-background-card border border-border-subtle rounded-xl p-6 project-card transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="w-10 h-10 bg-tertiary-fixed rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-fixed">neurology</span>
+</div>
+<span class="px-2 py-1 bg-error-container text-on-error-container text-[10px] font-bold rounded">URGENT</span>
+</div>
+<h4 class="text-headline-sm font-headline-sm text-text-primary mb-2">Neural Mapping Beta</h4>
+<p class="text-body-md text-text-secondary mb-6 line-clamp-2">High-resolution spatial transcriptomics applied to murine cortical development.</p>
+<div class="flex justify-between items-center pt-4 border-t border-border-subtle">
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full bg-primary-fixed border-2 border-background-card"></div>
+</div>
+<button class="text-primary text-label-md font-bold hover:underline">Revise Draft</button>
+</div>
+</div>
+<!-- Project 4 -->
+<div class="bg-background-card border border-border-subtle rounded-xl p-6 project-card transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="w-10 h-10 bg-surface-container-high rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">analytics</span>
+</div>
+<span class="px-2 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded">SUBMITTED</span>
+</div>
+<h4 class="text-headline-sm font-headline-sm text-text-primary mb-2">Ethical AI Framework</h4>
+<p class="text-body-md text-text-secondary mb-6 line-clamp-2">Cross-disciplinary study on algorithmic bias in clinical decision support systems.</p>
+<div class="flex justify-between items-center pt-4 border-t border-border-subtle">
+<p class="text-label-sm text-text-secondary italic">Review in progress</p>
+<button class="text-primary text-label-md font-bold hover:underline">Track Status</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- FAB (Contextual for New Action) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center group hover:scale-110 transition-transform active:scale-95 z-50">
+<span class="material-symbols-outlined text-[28px] group-hover:rotate-90 transition-transform duration-300">add</span>
+</button>
+</main>
+<script>
+        // Micro-interactions and effects
+        document.addEventListener('DOMContentLoaded', () => {
+            // Smooth progress bar animation
+            const progressBars = document.querySelectorAll('.bg-primary.h-3');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 300);
+            });
+
+            // Ripple effect on buttons
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.addEventListener('mousedown', function(e) {
+                    const x = e.clientX - e.target.getBoundingClientRect().left;
+                    const y = e.clientY - e.target.getBoundingClientRect().top;
+                    
+                    const ripples = document.createElement('span');
+                    ripples.style.left = x + 'px';
+                    ripples.style.top = y + 'px';
+                    // Inline ripple styling via JS for dynamic behavior
+                    ripples.classList.add('absolute', 'bg-white/30', 'pointer-events-none', 'rounded-full', '-translate-x-1/2', '-translate-y-1/2', 'animate-ping');
+                    ripples.style.width = '20px';
+                    ripples.style.height = '20px';
+                    
+                    this.appendChild(ripples);
+                    
+                    setTimeout(() => {
+                        ripples.remove();
+                    }, 1000);
+                });
+            });
+        });
+    </script>
+</body></html>
