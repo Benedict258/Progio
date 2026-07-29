@@ -13,8 +13,13 @@ import {
   ArrowRight,
   Save,
   BarChart3,
+  MessageCircle,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import {
+  AICoach,
+  getStoredCoachProfile,
+} from "@/components/AICoach";
 
 interface Concept {
   title: string;
@@ -52,6 +57,28 @@ export default function ScholarshipsBrainstormPage() {
   const [error, setError] = useState<string | null>(null);
   const [scholarshipName, setScholarshipName] = useState("");
   const [parsedOpp, setParsedOpp] = useState<Record<string, unknown> | null>(null);
+  const [coachProfile, setCoachProfile] = useState<ReturnType<typeof getStoredCoachProfile>>(null);
+  const [showCoach, setShowCoach] = useState(false);
+  const [coachContext, setCoachContext] = useState<string>("");
+
+  useEffect(() => {
+    const stored = getStoredCoachProfile();
+    if (stored) {
+      setCoachProfile(stored);
+    } else {
+      setShowCoach(true);
+    }
+  }, []);
+
+  const handleCoachComplete = (summary: string, profile: { field: string; focus: string; challenges: string; impact: string }) => {
+    setCoachProfile(profile);
+    setCoachContext(summary);
+    setShowCoach(false);
+  };
+
+  const handleCoachSkip = () => {
+    setShowCoach(false);
+  };
 
   const fetchOpportunities = useCallback(async () => {
     setLoadingOpps(true);
@@ -97,6 +124,7 @@ export default function ScholarshipsBrainstormPage() {
         body: JSON.stringify({
           opportunity_id: selectedOpp.id,
           user_id: "user-001",
+          coach_context: coachContext || undefined,
         }),
       });
 
@@ -176,6 +204,7 @@ export default function ScholarshipsBrainstormPage() {
         body: JSON.stringify({
           idea_text: freeformIdea,
           user_id: "user-001",
+          coach_context: coachContext || undefined,
         }),
       });
 
@@ -300,13 +329,28 @@ export default function ScholarshipsBrainstormPage() {
           <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
             <GraduationCap size={20} className="text-violet-600" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">Scholarship Idea Studio</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Nye&apos;s Idea Studio — Brainstorm to Blueprint</h1>
         </div>
-        <p className="text-slate-600 ml-13">
-          Generate tailored scholarship concepts from an opportunity or structure
-          your own personal statement idea.
-        </p>
+        <div className="flex items-center gap-4 ml-13">
+          <p className="text-slate-600">
+            Let Nye help you turn ideas into structured funding proposals.
+          </p>
+          {coachProfile && !showCoach && (
+            <button
+              onClick={() => setShowCoach(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-full hover:bg-violet-100 transition-colors"
+            >
+              <MessageCircle size={12} />
+              Chat with Nye
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* AI Coach */}
+      {showCoach && (
+        <AICoach onComplete={handleCoachComplete} onSkip={handleCoachSkip} />
+      )}
 
       {/* Mode Tabs */}
       <div className="flex gap-2 mb-8">
@@ -473,7 +517,7 @@ export default function ScholarshipsBrainstormPage() {
                   ))}
                   {filteredOpps.length === 0 && (
                     <p className="text-center text-slate-400 py-4">
-                      No scholarships found
+                      Start by selecting a scholarship or describing your idea. Nye will generate tailored proposal concepts.
                     </p>
                   )}
                 </div>
@@ -512,7 +556,7 @@ export default function ScholarshipsBrainstormPage() {
                   ) : (
                     <Sparkles size={16} />
                   )}
-                  {generating ? "Generating Concepts..." : "Generate Concepts"}
+                  {generating ? "Nye is generating concepts..." : "Generate Concepts"}
                 </button>
               </div>
 

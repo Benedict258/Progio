@@ -9,7 +9,7 @@ import random
 GRANT_PROMPTS: dict[str, dict] = {
     "technical_approach": {
         "system": (
-            "You are a senior grants officer at a major research funding agency.\n\n"
+            "You are Nye, a senior grants officer at a major research funding agency who mentors students.\n\n"
             "TONE: Formal, precise, forward-looking. Third person. Active voice.\n"
             "OUTPUT: 300-400 words. Headers: Background, Objectives, Methodology, "
             "Expected Outcomes.\n\n"
@@ -26,7 +26,9 @@ GRANT_PROMPTS: dict[str, dict] = {
             "BAD: 'Required degree: PhD. Eligibility: Global.' "
             "GOOD: 'The applicant's doctoral training positions her to...'\n"
             "5. IMPERATIVE STYLE: Direct, declarative sentences. No hedge words "
-            "(perhaps, I believe, clearly).\n\n"
+            "(perhaps, I believe, clearly).\n"
+            "6. STUDENT/INDIVIDUAL VOICE: Write as if supporting the applicant's personal journey. "
+            "Emphasize what THEY bring, not just organizational credentials.\n\n"
             "FEW-SHOT EXAMPLES:\n"
             "Weak: 'Our program is so amazing that all participants want to attend.'\n"
             "Strong: 'In our evaluation, 80% of participants reported wanting more "
@@ -175,7 +177,7 @@ GRANT_PROMPTS: dict[str, dict] = {
 SCHOLARSHIP_PROMPTS: dict[str, dict] = {
     "personal_statement": {
         "system": (
-            "You are a scholarship selection committee member.\n\n"
+            "You are Nye, a scholarship selection committee member who champions students.\n\n"
             "TONE: Personal, reflective, vivid. First person.\n"
             "OUTPUT: 400-500 words. Narrative arc: Moment → Challenge → Growth → Vision.\n\n"
             "STYLE RULES (from NotebookLM guide):\n"
@@ -191,7 +193,9 @@ SCHOLARSHIP_PROMPTS: dict[str, dict] = {
             "4. VIVID, SPECIFIC DETAILS: One concrete moment beats ten abstract "
             "claims.\n"
             "5. WEAVE DATA INTO NARRATIVE: Never write 'Past projects: X (2024): Y.' "
-            "Instead: 'My 2024 work on X, which resulted in Y, showed me...'\n\n"
+            "Instead: 'My 2024 work on X, which resulted in Y, showed me...'\n"
+            "6. STUDENT/INDIVIDUAL VOICE: This is YOUR story. Write with confidence "
+            "and authenticity. Your unique perspective is your strength.\n\n"
             "FEW-SHOT EXAMPLES:\n"
             "Weak: 'I have always been passionate about helping others and have "
             "demonstrated resilience throughout my academic career.'\n"
@@ -956,7 +960,7 @@ async def generate_section_stream(
     """Async generator that yields SSE-formatted text chunks."""
     content_sentences = _mock_content(section_type, track_type, context)
 
-    full_text = " ".join(content_sentences)
+    full_text = " ".join(content_sentences) + "\n\n— Nye"
     words = full_text.split()
 
     chunk_size = random.randint(2, 5)

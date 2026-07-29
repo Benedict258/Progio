@@ -213,8 +213,10 @@ export function AIToolbar({
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-violet-600 to-indigo-600">
           <div className="flex items-center gap-2 text-white">
-            <Sparkles size={14} />
-            <span className="text-xs font-semibold">AI Refine</span>
+            <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+              <Sparkles size={11} />
+            </div>
+            <span className="text-xs font-semibold">Nye — AI Refine</span>
           </div>
           <button
             onClick={onDismiss}
@@ -278,7 +280,7 @@ export function AIToolbar({
         {loading && !hasResult && (
           <div className="p-4 flex items-center justify-center gap-2 text-sm text-slate-500">
             <Loader2 size={16} className="animate-spin text-indigo-500" />
-            Refining your text...
+            Nye is refining your text...
           </div>
         )}
 

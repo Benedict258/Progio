@@ -21,8 +21,8 @@ const tracks = [
 export default function ReadinessPage() {
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold text-slate-900 mb-2">Readiness Assessments</h1>
-      <p className="text-slate-600">Evaluate your readiness for grants, scholarships, and research.</p>
+      <h1 className="text-3xl font-bold text-slate-900 mb-2">Funding Readiness Check</h1>
+      <p className="text-slate-600">See how funders view your application.</p>
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
         {tracks.map((track) => (
           <Link

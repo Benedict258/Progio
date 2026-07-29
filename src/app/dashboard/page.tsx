@@ -196,14 +196,14 @@ function GreetingHeader({
           {getGreeting()}, {user.name.split(" ").pop() || user.name}
         </h1>
         <p className="text-slate-500 mt-1">
-          Here&apos;s what&apos;s happening across your opportunities today.
+          Discover opportunities, craft proposals, and track your funding journey.
         </p>
       </div>
       <Link href="/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
         <div className="text-sm text-slate-600">
-          Quick start{" "}
+          Complete your profile to unlock personalized matches{" "}
           <span className="font-semibold text-indigo-600">
-            {completed}/{total}
+            {" "}{completed}/{total}
           </span>
         </div>
         <div className="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -366,8 +366,8 @@ function MatchingOpportunities({
           {filteredGrants.length === 0 ? (
             <EmptyState
               icon="grant"
-              title="No grants found"
-              description="Try adjusting your filters or check back later."
+              title="No grants match your profile yet"
+              description="Try broadening your search or updating your profile."
             />
           ) : (
             <>
@@ -397,7 +397,7 @@ function MatchingOpportunities({
           {filteredScholarships.length === 0 ? (
             <EmptyState
               icon="scholarship"
-              title="No scholarships found"
+              title="No scholarships match your profile yet"
               description="Complete your profile to improve matches."
             />
           ) : (

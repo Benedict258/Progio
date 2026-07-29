@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -13,9 +13,13 @@ import {
   ArrowRight,
   Save,
   BarChart3,
-  ChevronDown,
+  MessageCircle,
 } from "lucide-react";
-import { apiFetch, apiPost } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
+import {
+  AICoach,
+  getStoredCoachProfile,
+} from "@/components/AICoach";
 
 interface Concept {
   title: string;
@@ -54,7 +58,28 @@ export default function GrantsBrainstormPage() {
   const [error, setError] = useState<string | null>(null);
   const [grantName, setGrantName] = useState("");
   const [parsedOpp, setParsedOpp] = useState<Record<string, unknown> | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
+  const [coachProfile, setCoachProfile] = useState<ReturnType<typeof getStoredCoachProfile>>(null);
+  const [showCoach, setShowCoach] = useState(false);
+  const [coachContext, setCoachContext] = useState<string>("");
+
+  useEffect(() => {
+    const stored = getStoredCoachProfile();
+    if (stored) {
+      setCoachProfile(stored);
+    } else {
+      setShowCoach(true);
+    }
+  }, []);
+
+  const handleCoachComplete = (summary: string, profile: { field: string; focus: string; challenges: string; impact: string }) => {
+    setCoachProfile(profile);
+    setCoachContext(summary);
+    setShowCoach(false);
+  };
+
+  const handleCoachSkip = () => {
+    setShowCoach(false);
+  };
 
   const fetchOpportunities = useCallback(async () => {
     setLoadingOpps(true);
@@ -101,6 +126,7 @@ export default function GrantsBrainstormPage() {
         body: JSON.stringify({
           opportunity_id: selectedOpp.id,
           user_id: "user-001",
+          coach_context: coachContext || undefined,
         }),
       });
 
@@ -202,6 +228,7 @@ export default function GrantsBrainstormPage() {
         body: JSON.stringify({
           idea_text: freeformIdea,
           user_id: "user-001",
+          coach_context: coachContext || undefined,
         }),
       });
 
@@ -327,12 +354,28 @@ export default function GrantsBrainstormPage() {
           <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
             <Lightbulb size={20} className="text-amber-600" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">Idea Co-Creation</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Nye&apos;s Idea Studio — Brainstorm to Blueprint</h1>
         </div>
-        <p className="text-slate-600 ml-13">
-          Generate proposal concepts from a grant opportunity or structure your own idea.
-        </p>
+        <div className="flex items-center gap-4 ml-13">
+          <p className="text-slate-600">
+            Let Nye help you turn ideas into structured funding proposals.
+          </p>
+          {coachProfile && !showCoach && (
+            <button
+              onClick={() => setShowCoach(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-full hover:bg-violet-100 transition-colors"
+            >
+              <MessageCircle size={12} />
+              Chat with Nye
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* AI Coach */}
+      {showCoach && (
+        <AICoach onComplete={handleCoachComplete} onSkip={handleCoachSkip} />
+      )}
 
       {/* Mode Tabs */}
       <div className="flex gap-2 mb-8">
@@ -465,7 +508,9 @@ export default function GrantsBrainstormPage() {
                     </button>
                   ))}
                   {filteredOpps.length === 0 && (
-                    <p className="text-center text-slate-400 py-4">No grants found</p>
+                    <p className="text-center text-slate-400 py-4">
+                      Start by selecting a grant or describing your idea. Nye will generate tailored proposal concepts.
+                    </p>
                   )}
                 </div>
               )}
@@ -504,7 +549,7 @@ export default function GrantsBrainstormPage() {
                   ) : (
                     <Sparkles size={16} />
                   )}
-                  {generating ? "Generating Concepts..." : "Generate Concepts"}
+                  {generating ? "Nye is generating concepts..." : "Generate Concepts"}
                 </button>
               </div>
 

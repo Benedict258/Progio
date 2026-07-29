@@ -203,9 +203,9 @@ export default function AllScholarshipsPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">All Scholarships</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Discover Scholarships</h1>
         <p className="text-slate-600">
-          Browse and apply for scholarship opportunities matched to your profile.
+          Find opportunities that match your academic goals and aspirations.
         </p>
       </div>
 

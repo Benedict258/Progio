@@ -15,6 +15,8 @@ from app.api.projects import router as projects_router
 from app.api.readiness import router as readiness_router
 from app.api.refine import router as refine_router
 from app.api.research import router as research_router
+from app.api.template_parser import router as template_parser_router
+from app.api.web_search import router as web_search_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -52,6 +54,8 @@ app.include_router(projects_router)
 app.include_router(readiness_router)
 app.include_router(research_router)
 app.include_router(refine_router)
+app.include_router(web_search_router)
+app.include_router(template_parser_router)
 
 
 @app.get("/api/health")

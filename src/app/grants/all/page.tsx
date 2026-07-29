@@ -104,9 +104,9 @@ function EmptyState() {
       <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
         <Search size={24} className="text-slate-400" />
       </div>
-      <h3 className="text-lg font-semibold text-slate-900 mb-2">No grants found</h3>
+      <h3 className="text-lg font-semibold text-slate-900 mb-2">No grants match your profile yet</h3>
       <p className="text-slate-500 max-w-md mx-auto">
-        Try adjusting your filters or check back later. New opportunities are added regularly.
+        Try broadening your search or updating your profile.
       </p>
     </div>
   );
@@ -215,9 +215,9 @@ export default function AllGrantsPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">All Grants</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Discover Grants</h1>
         <p className="text-slate-600">
-          Browse and apply for grant opportunities matched to your profile.
+          Find opportunities that match your research and academic goals.
         </p>
       </div>
 

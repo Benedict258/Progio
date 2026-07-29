@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
@@ -79,12 +81,25 @@ async def update_application(
     if payload.sections is not None:
         if app.version_history is None:
             app.version_history = []
-        app.version_history.append({"sections": app.sections, "status": app.status})
+        app.version_history.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "sections": app.sections,
+            "status": app.status,
+        })
         app.sections = payload.sections
 
     await db.commit()
     await db.refresh(app)
     return _app_to_response(app)
+
+
+@router.put("/{app_id}", response_model=ApplicationResponse)
+async def put_application(
+    app_id: str,
+    payload: ApplicationUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    return await update_application(app_id, payload, db)
 
 
 @router.post("/{app_id}/generate-section")

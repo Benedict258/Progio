@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { Sparkles, Loader2 } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Sparkles, Loader2, Search, X, ExternalLink } from "lucide-react";
 
 interface AICoWriterButtonProps {
   applicationId: string;
   trackType: string;
   sectionKey: string;
   onStream: (content: string) => void;
+}
+
+interface SearchResult {
+  title: string;
+  url: string;
+  snippet: string;
+  source: string;
 }
 
 export function AICoWriterButton({
@@ -17,6 +24,10 @@ export function AICoWriterButton({
   onStream,
 }: AICoWriterButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -58,19 +69,122 @@ export function AICoWriterButton({
     }
   };
 
+  const handleSearch = useCallback(async () => {
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    try {
+      const res = await fetch("http://localhost:8000/api/ai/web-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: searchQuery }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(data.results || []);
+      }
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  }, [searchQuery]);
+
+  const insertResult = (result: SearchResult) => {
+    const text = `\n\n[${result.title}](${result.url})\n${result.snippet}\nSource: ${result.source}\n`;
+    onStream(text);
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
   return (
-    <button
-      onClick={handleGenerate}
-      disabled={loading}
-      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-    >
-      {loading ? (
-        <Loader2 size={16} className="animate-spin" />
-      ) : (
-        <Sparkles size={16} />
+    <>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleGenerate}
+          disabled={loading}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+        >
+          {loading ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Sparkles size={16} />
+          )}
+          {loading ? "Generating..." : "AI Co-Writer"}
+        </button>
+
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors"
+        >
+          <Search size={16} />
+          Web Search
+        </button>
+      </div>
+
+      {searchOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+              <h3 className="text-sm font-semibold text-slate-900">Web Search</h3>
+              <button
+                onClick={() => { setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}
+                className="p-1 rounded hover:bg-slate-100 text-slate-400"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-5">
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  placeholder="Search for statistics, data, sources..."
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <button
+                  onClick={handleSearch}
+                  disabled={searching || !searchQuery.trim()}
+                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                >
+                  {searching ? <Loader2 size={14} className="animate-spin" /> : "Search"}
+                </button>
+              </div>
+              {searchResults.length > 0 && (
+                <div className="space-y-2 max-h-72 overflow-y-auto">
+                  {searchResults.map((r, i) => (
+                    <div
+                      key={i}
+                      className="p-3 border border-slate-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50/50 transition-colors cursor-pointer group"
+                      onClick={() => insertResult(r)}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-900 group-hover:text-indigo-700 truncate">
+                            {r.title}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-0.5">{r.source}</p>
+                          <p className="text-xs text-slate-600 mt-1 line-clamp-2">{r.snippet}</p>
+                        </div>
+                        <ExternalLink size={14} className="text-slate-400 group-hover:text-indigo-500 flex-shrink-0 mt-0.5" />
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1 truncate">{r.url}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {searchResults.length === 0 && !searching && (
+                <p className="text-xs text-slate-400 text-center py-4">
+                  Enter a query and click Search to find academic and government sources.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
-      {loading ? "Generating..." : "AI Co-Writer"}
-    </button>
+    </>
   );
 }
 
